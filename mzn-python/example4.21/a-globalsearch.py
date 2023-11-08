@@ -1,30 +1,8 @@
-from datetime import datetime
-import os
+import os, time
 os.system("clear")
 
 from minizinc import Instance, Model, Solver
 
-class Chronometer :
-    def __init__(self) -> None:
-        self.t1 = 0
-        self.t2 = 0
-        self.tt = 0
-
-    def start(self) :
-        self.t1 = datetime.utcnow() - datetime(1970, 1, 1)
-
-    def stop(self) :
-        self.t2 = datetime.utcnow() - datetime(1970, 1, 1)
-        self.tt = self.t2.total_seconds()-self.t1.total_seconds()
-        return round(self.tt*100)/100
-    
-    def get(self) :
-        return round(self.tt*100)/100
-    
-    def __str__(self) -> str:
-        return str(round(self.tt*100)/100)
-
-chron       = Chronometer()
 solver      = Solver.lookup("gecode")
 nPlayers    = 5
 nStrategies = 5
@@ -38,14 +16,14 @@ insGame         = Instance(solver, game)
 insGame["n"]    = nPlayers
 insGame["s"]    = nStrategies
 
-chron.start()
+start   = time.time()
 resGame = insGame.solve(all_solutions=True)
-chron.stop()
+end     = time.time()
 
 # for i in range(len(resGame)) :
 #     print(resGame[i,"V"],end=",")
 #     print(resGame[i,"U"])
-print("Total solutions: " + str(len(resGame)) + " [" + str(chron) + "sg]")
+print(f"Total solutions: {len(resGame)} [{(end-start):.2f}sg]")
 
 #-----------------------------------------------
 
@@ -66,9 +44,9 @@ insPNE["l"]     = len(resGame)
 insPNE["Vs"]    = Vaux
 insPNE["Us"]    = Uaux
 
-chron.start()
-resPNE = insPNE.solve(all_solutions=True)
-chron.stop()
+start   = time.time()
+resPNE  = insPNE.solve(all_solutions=True)
+end     = time.time()
 
 # print(resPNE["V"], end="  ")
 # print(resPNE["U"])
@@ -76,6 +54,6 @@ chron.stop()
 for i in range(len(resPNE)) :
     print(resPNE[i,"V"], end="  ")
     print(resPNE[i,"U"])
-print("Total solutions: " + str(len(resPNE)) + " [" + str(chron) + "sg]")
+print(f"Total solutions: {len(resPNE)} [{(end-start):.2f}sg]")
 
 print()

@@ -1,13 +1,13 @@
 enum P = {X,Y,Z};
 set of int : D = 1..3;
-array [P] of var D      : V;
+array [P] of var D      : S;
 array [P] of var bool   : U;
 
 %---------------------------------------------
 
-var int : x = V[X];
-var int : y = V[Y];
-var int : z = V[Z];
+var int : x = S[X];
+var int : y = S[Y];
+var int : z = S[Z];
 
 %---------------------------------------------
 
