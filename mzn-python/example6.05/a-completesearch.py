@@ -13,8 +13,8 @@ async def testing_all_results() :
     async for result in inst.solutions(all_solutions=True) :
         if result.solution is None : continue
 
-        v,u = result["V"],result["U"]
-        print(str(v)+" "+str(u))
+        s,u = result["S"],result["U"]
+        print(str(s)+" "+str(u))
 
 #--------------------------------------------------------------
 
