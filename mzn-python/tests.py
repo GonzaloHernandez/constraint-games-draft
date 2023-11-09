@@ -1,49 +1,29 @@
 import os
 os.system("clear")
 
-# import asyncio
-# import minizinc
+class Value :
+    def __init__(self, value) -> None:
+        self.value = value
+    
+    def __add__(self, other) :
+        return self.value + other.value
 
-# async def show_solutions() :
-#     model       = minizinc.Model("./example4.21/model/problem.mzn")
-#     model["n"]  = 1
-#     model["s"]  = 1
-#     solver      = minizinc.Solver.lookup("gecode")
-#     instance    = minizinc.Instance(solver, model)
+    def __add__(self, other) :
+        return Expression(self.value,'+',other)
 
-#     async for result in instance.solutions(all_solutions=True) :
-#         if result.solution is None : continue
+class Expression :
+    def __init__(self,exp1,oper,exp2) -> None:
+        self.exp1 = exp1
+        self.oper = oper
+        self.exp2 = exp2
 
-#         print(result["V"])
+    def __init__(self,exp1) -> None:
+        self.exp1 = exp1
+        self.oper = None
+        self.exp2 = None
 
-# asyncio.run(show_solutions())
-
-
-# import asyncio,time
-
-# async def s() :
-#     for _ in range(10) :
-#         print(".")
-#         time.sleep(0.3)
-#     return 10
-
-# async def main() :
-#     print("1")
-#     r = await s()
-#     print(r)
-
-# asyncio.run(main())
-
-U = [True,True,False]
-Ut = ['true','true','true']
-
-# for u in U :
-#     Ut += 'true' if u else 'false'
-
-text = (
-"""
-Text included {}.
-"""
-).format(Ut)
-
-print(text)
+ 
+a = Value(3)
+b = Value(5)
+c = 8 * a + 4
+print(c)
