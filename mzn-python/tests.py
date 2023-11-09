@@ -1,22 +1,22 @@
 import os
 os.system("clear")
 
-import asyncio
-import minizinc
+# import asyncio
+# import minizinc
 
-async def show_solutions() :
-    model       = minizinc.Model("./example4.21/model/problem.mzn")
-    model["n"]  = 1
-    model["s"]  = 1
-    solver      = minizinc.Solver.lookup("gecode")
-    instance    = minizinc.Instance(solver, model)
+# async def show_solutions() :
+#     model       = minizinc.Model("./example4.21/model/problem.mzn")
+#     model["n"]  = 1
+#     model["s"]  = 1
+#     solver      = minizinc.Solver.lookup("gecode")
+#     instance    = minizinc.Instance(solver, model)
 
-    async for result in instance.solutions(all_solutions=True) :
-        if result.solution is None : continue
+#     async for result in instance.solutions(all_solutions=True) :
+#         if result.solution is None : continue
 
-        print(result["V"])
+#         print(result["V"])
 
-asyncio.run(show_solutions())
+# asyncio.run(show_solutions())
 
 
 # import asyncio,time
@@ -33,3 +33,17 @@ asyncio.run(show_solutions())
 #     print(r)
 
 # asyncio.run(main())
+
+U = [True,True,False]
+Ut = ['true','true','true']
+
+# for u in U :
+#     Ut += 'true' if u else 'false'
+
+text = (
+"""
+Text included {}.
+"""
+).format(Ut)
+
+print(text)

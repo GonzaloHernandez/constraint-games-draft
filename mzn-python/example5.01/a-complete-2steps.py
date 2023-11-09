@@ -4,7 +4,7 @@ os.system("clear")
 from minizinc import Instance, Model, Solver
 
 print("---------------- Step 1 ---------------------")
-model = Model("./example5.01/example5.01.mzn")
+model = Model("./example5.01/model/example5.01.mzn")
 gecode = Solver.lookup("gecode")
 instanceP = Instance(gecode, model)
 resultP = instanceP.solve(all_solutions=True)
@@ -18,7 +18,7 @@ for i in range(len(resultP)) :
     tempU.append(resultP[i, "U"])
 
 print("---------------- Step 2 ---------------------")
-pne = Model("./example5.01/pne.mzn")
+pne = Model("./example5.01/model/pne.mzn")
 instanceE = Instance(gecode, pne)
 instanceE["l"]  = len(resultP)
 instanceE["Vs"] = tempV
