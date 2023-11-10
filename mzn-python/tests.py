@@ -1,42 +1,29 @@
-import os,copy
+import os
 os.system("clear")
 
-class IntVar :
-    def __init__(self, name, min, max) -> None:
-        self.name   = name
-        self.min    = min
-        self.max    = max
-
-    def __str__(self) -> str:
-        if self.isFailed() :
-            return f"{self.name}[]"
-        elif self.isAssigned() :
-            return f"{self.name}[{str(self.min)}]"
-        else :
-            return f"{self.name}[{str(self.min)}..{str(self.max)}]"
+class Value :
+    def __init__(self, value) -> None:
+        self.value = value
     
-    def isAssigned(self) :
-        return (self.min==self.max)
-    
-    def isFailed(self) :
-        return (self.min>self.max)
-    
-    def __eq__(self, __value: object) -> bool:
-        pass
+    def __add__(self, other) :
+        return self.value + other.value
 
-vs = [  IntVar('s1',1,3),
-        IntVar('s2',1,3),
-        IntVar('s3',1,3),
-        IntVar('u1',0,1),
-        IntVar('u2',0,1),
-        IntVar('u3',0,1)
-    ]
+    def __add__(self, other) :
+        return Expression(self.value,'+',other)
 
-vt = copy.deepcopy(vs)
+class Expression :
+    def __init__(self,exp1,oper,exp2) -> None:
+        self.exp1 = exp1
+        self.oper = oper
+        self.exp2 = exp2
 
-for i,v in enumerate(vs) :
-    if i == 2 :
-        v.min = 2
+    def __init__(self,exp1) -> None:
+        self.exp1 = exp1
+        self.oper = None
+        self.exp2 = None
 
-for v in vt :
-    print(v)
+ 
+a = Value(3)
+b = Value(5)
+c = (a + b) + a
+print(c)

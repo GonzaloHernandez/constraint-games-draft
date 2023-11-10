@@ -13,9 +13,9 @@ class IntVar :
         if self.isFailed() :
             return f"{self.name}()"
         elif self.isAssigned() :
-            return f"{self.name}({str(self.min)})"
+            return f"{self.name}{{{str(self.min)}}}"
         else :
-            return f"{self.name}({str(self.min)}..{str(self.max)})"
+            return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
     
     def isAssigned(self) :
         return (self.min==self.max)
@@ -23,11 +23,34 @@ class IntVar :
     def isFailed(self) :
         return (self.min>self.max)
     
+    def __eq__(self, exp) :
+        return Expression(self,"=",exp)
+
+    def __add__(self, exp) :
+        return Expression(self,"+",exp)
+
+    def __sub__(self, exp) :
+        return Expression(self,"-",exp)
+
+    def __mul__(self, exp) :
+        return Expression(self,"*",exp)
+
+    def __mul__(self, exp) :
+        return Expression(self,"*",exp)
+
+    def __and__(self, exp) :
+        return Expression(self,"&",exp)
+
+    def __or__(self, exp) :
+        return Expression(self,"|",exp)
+
+
 # -------------------------------------------------
 
 class Solver :
-    def __init__(self, vars) -> None:
+    def __init__(self, vars, cons) -> None:
         self.vars = vars
+        self.cons = cons
     
     def __str__(self) -> str:
         text = "["
@@ -37,6 +60,50 @@ class Solver :
 
     def propagate(self) :
         propagate(self.vars)
+
+# -------------------------------------------------
+
+class Expression :
+    def __init__(self, exp1, oper, exp2) -> None:
+        self.exp1 = exp1
+        self.oper = oper
+        self.exp2 = exp2
+
+    def __str__(self) -> str:
+        if self.oper is None :
+            return str(self.exp1)
+        else :
+            return "("+str(self.exp1) + self.oper + str(self.exp2)+")"
+
+    def __eq__(self, exp) :
+        return Expression(self,"=",exp)
+
+    def __add__(self, exp) :
+        return Expression(self,"+",exp)
+
+    def __sub__(self, exp) :
+        return Expression(self,"-",exp)
+
+    def __mul__(self, exp) :
+        return Expression(self,"*",exp)
+
+    def __mul__(self, exp) :
+        return Expression(self,"*",exp)
+
+    def __and__(self, exp) :
+        return Expression(self,"&",exp)
+
+    def __or__(self, exp) :
+        return Expression(self,"|",exp)
+
+# -------------------------------------------------
+
+class Constraint :
+    def __init__(self, exp) -> None:
+        self.exp = exp
+
+    def __str__(self) -> str:
+        return str(self.exp)
 
 # -------------------------------------------------
 
@@ -51,7 +118,11 @@ def propagate(vars) :
     for v in vars :
         if v.isFailed() :
             return None
-        
+    
+    for v in vars :
+        if v.prune() :
+            return None
+
     assigned = True
     for v in vars :
         if not v.isAssigned() :
@@ -75,15 +146,31 @@ def propagate(vars) :
                     
 # -------------------------------------------------
 
-vs  = Solver([
-        IntVar('s1',5,7),
-        IntVar('s2',5,7),
-        IntVar('u1',0,1),
-        IntVar('u2',0,1),
+x = IntVar('x',1,3)
+y = IntVar('y',1,3)
+z = IntVar('z',1,3)
+ux = IntVar('ux',0,1)
+uy = IntVar('uy',0,1)
+uz = IntVar('uz',0,1)
+
+
+vs  = Solver([x,y,z,ux,uy,uz],
+        [
+            Constraint(
+                ux == (x == (y*z)) 
+            ),
+            Constraint( 
+                uy == (y == (x*z)) 
+            ),
+            Constraint(
+                (x*y <= z & z <= x+y) 
+                &
+                ((x+1)*(y+1) != 3*z) 
+            )
         ])
 
-vs.propagate()
+# vs.propagate()
 
 # -------------------------------------------------
-
-
+c = Constraint( ux == (x == (y*z)) )
+print(c)
