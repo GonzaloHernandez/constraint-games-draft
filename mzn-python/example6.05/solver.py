@@ -17,15 +17,18 @@ class IntVar :
         else :
             return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
     
+    def setge(self, val) :
+        self.min = val
+
+    def setle(self, val) :
+        self.max = val
+
     def isAssigned(self) :
         return (self.min==self.max)
     
     def isFailed(self) :
         return (self.min>self.max)
     
-    def __eq__(self, exp) :
-        return Expression(self,"=",exp)
-
     def __add__(self, exp) :
         return Expression(self,"+",exp)
 
@@ -38,28 +41,65 @@ class IntVar :
     def __mul__(self, exp) :
         return Expression(self,"*",exp)
 
+    def __eq__(self, exp) :
+        return Expression(self,"=",exp)
+
+    def __ne__(self, exp) :
+        return Expression(self,"!=",exp)
+
+    def __lt__(self, exp) :
+        return Expression(self,"<",exp)
+
+    def __le__(self, exp) :
+        return Expression(self,"<=",exp)
+
+    def __gt__(self, exp) :
+        return Expression(self,">",exp)
+
+    def __ge__(self, exp) :
+        return Expression(self,">=",exp)
+
     def __and__(self, exp) :
         return Expression(self,"&",exp)
 
     def __or__(self, exp) :
         return Expression(self,"|",exp)
 
-
 # -------------------------------------------------
 
-class Solver :
+class SearchInstance :
     def __init__(self, vars, cons) -> None:
         self.vars = vars
         self.cons = cons
     
-    def __str__(self) -> str:
-        text = "["
-        for v in self.vars :
-            text += str(v) + " "
-        return text+"]"
-
     def propagate(self) :
-        propagate(self.vars)
+        for c in self.cons :
+            c.prune()
+
+        for v in self.vars :
+            if v.isFailed() :
+                return None
+        
+        assigned = True
+        for v in self.vars :
+            if not v.isAssigned() :
+                assigned = False
+        
+        if assigned :
+            printlist(self.vars)
+            return self.vars
+        else :
+            for i,v in enumerate(self.vars) :
+                if not v.isAssigned():
+                    left    = copy.deepcopy(self)
+                    right   = copy.deepcopy(self)
+
+                    left    .vars[i].setle(right.vars[i].min)
+                    right   .vars[i].setge(right.vars[i].min+1)
+
+                    left    .propagate()
+                    right   .propagate()
+                    break
 
 # -------------------------------------------------
 
@@ -75,8 +115,8 @@ class Expression :
         else :
             return "("+str(self.exp1) + self.oper + str(self.exp2)+")"
 
-    def __eq__(self, exp) :
-        return Expression(self,"=",exp)
+    def prune(self) :
+        pass
 
     def __add__(self, exp) :
         return Expression(self,"+",exp)
@@ -90,21 +130,30 @@ class Expression :
     def __mul__(self, exp) :
         return Expression(self,"*",exp)
 
+    def __eq__(self, exp) :
+        return Expression(self,"=",exp)
+
+    def __ne__(self, exp) :
+        return Expression(self,"!=",exp)
+
+    def __lt__(self, exp) :
+        return Expression(self,"<",exp)
+
+    def __le__(self, exp) :
+        return Expression(self,"<=",exp)
+
+    def __gt__(self, exp) :
+        return Expression(self,">",exp)
+
+    def __ge__(self, exp) :
+        return Expression(self,">=",exp)
+
     def __and__(self, exp) :
         return Expression(self,"&",exp)
 
     def __or__(self, exp) :
         return Expression(self,"|",exp)
-
-# -------------------------------------------------
-
-class Constraint :
-    def __init__(self, exp) -> None:
-        self.exp = exp
-
-    def __str__(self) -> str:
-        return str(self.exp)
-
+    
 # -------------------------------------------------
 
 def printlist(ls) :
@@ -114,36 +163,16 @@ def printlist(ls) :
 
 # -------------------------------------------------
 
-def propagate(vars) :
-    for v in vars :
-        if v.isFailed() :
-            return None
-    
-    for v in vars :
-        if v.prune() :
-            return None
+class Constraint :
+    def __init__(self, exp) -> None:
+        self.exp = exp
 
-    assigned = True
-    for v in vars :
-        if not v.isAssigned() :
-            assigned = False
+    def __str__(self) -> str:
+        return str(self.exp)
     
-    if assigned :
-        printlist(vars)
-        return vars
-    else :
-        for i,v in enumerate(vars) :
-            if not v.isAssigned():
-                v1 = IntVar(v.name, v.min, v.min)
-                v2 = IntVar(v.name, v.min+1, v.max)
-                vars1 = copy.deepcopy(vars)
-                vars2 = copy.deepcopy(vars)
-                vars1[i],vars2[i] = v1,v2
-                
-                assigned = propagate(vars1)
-                assigned = propagate(vars2)
-                break
-                    
+    def prune(self) :
+        self.exp.prune()
+
 # -------------------------------------------------
 
 x = IntVar('x',1,3)
@@ -153,8 +182,8 @@ ux = IntVar('ux',0,1)
 uy = IntVar('uy',0,1)
 uz = IntVar('uz',0,1)
 
-
-vs  = Solver([x,y,z,ux,uy,uz],
+i1  = SearchInstance(
+        [x,y,z,ux,uy,uz],
         [
             Constraint(
                 ux == (x == (y*z)) 
@@ -165,12 +194,13 @@ vs  = Solver([x,y,z,ux,uy,uz],
             Constraint(
                 (x*y <= z & z <= x+y) 
                 &
-                ((x+1)*(y+1) != 3*z) 
+                ((x+1)*(y+1) != z*3) 
             )
         ])
 
-# vs.propagate()
+i2 = copy.deepcopy(i1)
+
+i1.propagate()
 
 # -------------------------------------------------
-c = Constraint( ux == (x == (y*z)) )
-print(c)
+
