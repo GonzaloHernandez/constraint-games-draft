@@ -3,32 +3,14 @@ os.system("clear")
 
 # -------------------------------------------------
 
-class IntVar :
-    def __init__(self, name, min, max) -> None:
-        self.name   = name
-        self.min    = min
-        self.max    = max
+def printlist(ls) :
+    print("[ ",end="")
+    for l in ls : print(l,end=" ")
+    print("]")
 
-    def __str__(self) -> str:
-        if self.isFailed() :
-            return f"{self.name}()"
-        elif self.isAssigned() :
-            return f"{self.name}{{{str(self.min)}}}"
-        else :
-            return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
-    
-    def setge(self, val) :
-        self.min = val
+# -------------------------------------------------
 
-    def setle(self, val) :
-        self.max = val
-
-    def isAssigned(self) :
-        return (self.min==self.max)
-    
-    def isFailed(self) :
-        return (self.min>self.max)
-    
+class Operable :
     def __add__(self, exp) :
         return Expression(self,"+",exp)
 
@@ -65,6 +47,51 @@ class IntVar :
     def __or__(self, exp) :
         return Expression(self,"|",exp)
 
+# -------------------------------------------------
+
+class IntVar (Operable) :
+    def __init__(self, name, min, max) -> None:
+        self.name   = name
+        self.min    = min
+        self.max    = max
+
+    def __str__(self) -> str:
+        if self.isFailed() :
+            return f"{self.name}()"
+        elif self.isAssigned() :
+            return f"{self.name}{{{str(self.min)}}}"
+        else :
+            return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
+    
+    def setge(self, val) :
+        self.min = val
+
+    def setle(self, val) :
+        self.max = val
+
+    def isAssigned(self) :
+        return (self.min==self.max)
+    
+    def isFailed(self) :
+        return (self.min>self.max)
+
+# -------------------------------------------------
+
+class Expression (Operable):
+    def __init__(self, exp1, oper, exp2) -> None:
+        self.exp1 = exp1
+        self.oper = oper
+        self.exp2 = exp2
+
+    def __str__(self) -> str:
+        if self.oper is None :
+            return str(self.exp1)
+        else :
+            return "("+str(self.exp1) + self.oper + str(self.exp2)+")"
+
+    def prune(self) :
+        pass
+    
 # -------------------------------------------------
 
 class SearchInstance :
@@ -100,66 +127,6 @@ class SearchInstance :
                     left    .propagate()
                     right   .propagate()
                     break
-
-# -------------------------------------------------
-
-class Expression :
-    def __init__(self, exp1, oper, exp2) -> None:
-        self.exp1 = exp1
-        self.oper = oper
-        self.exp2 = exp2
-
-    def __str__(self) -> str:
-        if self.oper is None :
-            return str(self.exp1)
-        else :
-            return "("+str(self.exp1) + self.oper + str(self.exp2)+")"
-
-    def prune(self) :
-        pass
-
-    def __add__(self, exp) :
-        return Expression(self,"+",exp)
-
-    def __sub__(self, exp) :
-        return Expression(self,"-",exp)
-
-    def __mul__(self, exp) :
-        return Expression(self,"*",exp)
-
-    def __mul__(self, exp) :
-        return Expression(self,"*",exp)
-
-    def __eq__(self, exp) :
-        return Expression(self,"=",exp)
-
-    def __ne__(self, exp) :
-        return Expression(self,"!=",exp)
-
-    def __lt__(self, exp) :
-        return Expression(self,"<",exp)
-
-    def __le__(self, exp) :
-        return Expression(self,"<=",exp)
-
-    def __gt__(self, exp) :
-        return Expression(self,">",exp)
-
-    def __ge__(self, exp) :
-        return Expression(self,">=",exp)
-
-    def __and__(self, exp) :
-        return Expression(self,"&",exp)
-
-    def __or__(self, exp) :
-        return Expression(self,"|",exp)
-    
-# -------------------------------------------------
-
-def printlist(ls) :
-    print("[ ",end="")
-    for l in ls : print(l,end=" ")
-    print("]")
 
 # -------------------------------------------------
 
