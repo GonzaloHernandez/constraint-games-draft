@@ -89,7 +89,21 @@ class Expression (Operable):
         else :
             return "("+str(self.exp1) + self.oper + str(self.exp2)+")"
 
-    def prune(self) :
+    def evaluate(self) :
+        if  isinstance(self.exp1, int) :
+            return [self.exp1,self.exp1]
+
+        if  isinstance(self.exp1, IntVar) :
+            return [self.exp1.min,self.exp1.max]
+        
+        [lmin,lmax] = self.exp1.evaluate()
+        [rmin,rmax] = self.exp2.evaluate()
+
+        
+
+        return [0,0]
+
+    def project(self, range) :
         pass
     
 # -------------------------------------------------
@@ -138,7 +152,8 @@ class Constraint :
         return str(self.exp)
     
     def prune(self) :
-        self.exp.prune()
+        [min,max] = self.exp.evaluate()
+        self.exp.project( [min,max] )
 
 # -------------------------------------------------
 
