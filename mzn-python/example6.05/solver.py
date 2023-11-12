@@ -91,19 +91,49 @@ class Expression (Operable):
 
     def evaluate(self) :
         if  isinstance(self.exp1, int) :
-            return [self.exp1,self.exp1]
+            self.range = [self.exp1,self.exp1]
 
         if  isinstance(self.exp1, IntVar) :
-            return [self.exp1.min,self.exp1.max]
+            self.range = [self.exp1.min,self.exp1.max]
         
         [lmin,lmax] = self.exp1.evaluate()
         [rmin,rmax] = self.exp2.evaluate()
 
-        
+        match self.oper :
+            case "+" :
+                self.range = [lmin+rmin , lmax+rmax]
+            case "-" :
+                self.range = [lmin-rmax , lmax-rmin]
+            case "*" :
+                self.range = [lmin*rmin , lmax*rmax]
+            case "==" :
+                self.range = [0 , 1]
 
-        return [0,0]
+        return self.range
 
     def project(self, range) :
+        [newmin,newmax] = range
+
+        if  isinstance(self.exp1, int) :
+            pass
+
+        if  isinstance(self.exp1, IntVar) :
+            self.exp1.setge(newmin)
+            self.exp1.setle(newmax)
+            return
+
+        [prewin,premax] = self.range
+
+        match self.oper :
+            case "+" :
+                pass
+            case "-" :
+                pass
+            case "*" :
+                pass
+            case "==" :
+                pass
+
         pass
     
 # -------------------------------------------------
