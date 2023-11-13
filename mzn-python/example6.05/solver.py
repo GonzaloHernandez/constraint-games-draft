@@ -1,4 +1,4 @@
-import os, copy
+import os, copy, math
 os.system("clear")
 
 #====================================================================
@@ -158,7 +158,10 @@ class Expression (Operable):
             case "-" :
                 [self.min, self.max] = [lmin-rmax , lmax-rmin]
             case "*" :
-                [self.min, self.max] = [lmin*rmin , lmax*rmax]
+                [self.min, self.max] = [
+                    min(lmin*rmin, lmin*rmax, lmax*rmin, lmax*rmax),
+                    max(lmin*rmin, lmin*rmax, lmax*rmin, lmax*rmax)
+                ]
             case "==" :
                 [self.min, self.max] = [max(lmin,rmin), min(lmax,rmax)]
 
@@ -189,6 +192,30 @@ class Expression (Operable):
                 [lmin,lmax] = [self.exp1.min, self.exp1.max]
                 [rmin,rmax] = [curmin+lmin,curmax+rmax]
                 self.exp2.project(rmin, rmax)
+            case "*" :
+                [lmin,lmax] = [self.exp1.min, self.exp1.max]
+                [rmin,rmax] = [self.exp2.min, self.exp2.max]
+
+
+                if rmin == 0 : rmin = 1
+                if rmax == 0 : rmax = 1
+                
+                [lmin,lmax] = [
+                    min(newmin//rmin, newmin//rmax, newmax//rmin, newmax//rmax),
+                    max(math.ceil(newmin/rmin), math.ceil(newmin*rmax), 
+                        math.ceil(newmax*rmin), math.ceil(newmax*rmax))
+                ]
+                self.exp1.project(lmin, lmax)
+
+                if lmin == 0 : lmin = 1
+                if lmax == 0 : lmax = 1
+
+                [rmin,rmax] = [
+                    min(newmin//lmin, newmin//lmax, newmax//lmin, newmax//lmax),
+                    max(math.ceil(newmin/lmin), math.ceil(newmin*lmax), 
+                        math.ceil(newmax*lmin), math.ceil(newmax*lmax))
+                ]
+                self.exp2.project(rmin, rmax)
 
 #====================================================================
 
@@ -205,14 +232,15 @@ class Constraint :
 
 #====================================================================
 
-x = IntVar('x',1,5)
-y = IntVar('y',3,7)
+x = IntVar('x', 2,6)
+y = IntVar('y',-2,5)
+z = IntVar('y', 1,3)
 
 i1  = SearchInstance(
-        [x,y],
+        [x,y,z],
         [
             Constraint(
-                x == y + 1
+                x == y * z
             )
         ])
 

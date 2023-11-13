@@ -1,10 +1,9 @@
 import os
 os.system("clear")
 
-def function(x, y) :
-    return [1,3]
+a = 5
+b = 7
 
+c = a // b
 
-[a,b] = function([4,5])
-
-print(f"{a}  {b}")
+print(c)
