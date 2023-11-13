@@ -141,6 +141,7 @@ class Expression (Operable):
         self.oper = oper
         self.exp2 = exp2
 
+    #--------------------------------------------------------------
     def __str__(self) -> str:
         if self.oper is None :
             return str(self.exp1)
@@ -163,47 +164,38 @@ class Expression (Operable):
                     max(lmin*rmin, lmin*rmax, lmax*rmin, lmax*rmax)
                 ]
             case "==" :
-                [self.min, self.max] = [max(lmin,rmin), min(lmax,rmax)]
+                if lmin==rmin and lmax==rmax :
+                    self.min = self.max = 1
+                elif lmin > rmax or rmin > lmax :
+                    self.min = self.max = 0
+                else :
+                    [self.min, self.max] = [0,1]
 
         return [self.min, self.max]
 
     #--------------------------------------------------------------
-    def project(self, newmin, newmax) :
-        [premin, premax] = [self.min, self.max]
-        [curmin, curmax] = max(premin,newmin), min(premax, newmax)
+    def project(self, nmin, nmax) :
+        [lmin,lmax] = [self.exp1.min, self.exp1.max]
+        [rmin,rmax] = [self.exp2.min, self.exp2.max]
 
         match self.oper :
             case "==" :
-                self.exp1.project(curmin, curmax)
-                self.exp2.project(curmin, curmax)
+                self.exp1.project( max(lmin,rmin), min(lmax,rmax) )
+                self.exp2.project( max(lmin,rmin), min(lmax,rmax) )
             case "+" :
-                [rmin,rmax] = [self.exp2.min, self.exp2.max]
-                [lmin,lmax] = [curmin-rmax,curmax-rmin]
-                self.exp1.project(lmin, lmax)
-
-                [lmin,lmax] = [self.exp1.min, self.exp1.max]
-                [rmin,rmax] = [curmin-lmax,curmax-lmin]
-                self.exp2.project(rmin, rmax)
+                self.exp1.project( nmin-rmax , nmax-rmin )
+                self.exp2.project( nmin-lmax , nmax-lmin )
             case "-" :
-                [rmin,rmax] = [self.exp2.min, self.exp2.max]
-                [lmin,lmax] = [curmin+rmin,curmax+rmax]
-                self.exp1.project(lmin, lmax)
-
-                [lmin,lmax] = [self.exp1.min, self.exp1.max]
-                [rmin,rmax] = [curmin+lmin,curmax+rmax]
-                self.exp2.project(rmin, rmax)
+                self.exp1.project( nmin+rmin , nmax+rmax )
+                self.exp2.project( lmin-nmax , lmax-nmin )
             case "*" :
-                [lmin,lmax] = [self.exp1.min, self.exp1.max]
-                [rmin,rmax] = [self.exp2.min, self.exp2.max]
-
-
                 if rmin == 0 : rmin = 1
                 if rmax == 0 : rmax = 1
                 
                 [lmin,lmax] = [
-                    min(newmin//rmin, newmin//rmax, newmax//rmin, newmax//rmax),
-                    max(math.ceil(newmin/rmin), math.ceil(newmin*rmax), 
-                        math.ceil(newmax*rmin), math.ceil(newmax*rmax))
+                    min(nmin//rmin, nmin//rmax, nmax//rmin, nmax//rmax),
+                    max(math.ceil(nmin/rmin), math.ceil(nmin*rmax), 
+                        math.ceil(nmax*rmin), math.ceil(nmax*rmax))
                 ]
                 self.exp1.project(lmin, lmax)
 
@@ -211,9 +203,9 @@ class Expression (Operable):
                 if lmax == 0 : lmax = 1
 
                 [rmin,rmax] = [
-                    min(newmin//lmin, newmin//lmax, newmax//lmin, newmax//lmax),
-                    max(math.ceil(newmin/lmin), math.ceil(newmin*lmax), 
-                        math.ceil(newmax*lmin), math.ceil(newmax*lmax))
+                    min(nmin//lmin, nmin//lmax, nmax//lmin, nmax//lmax),
+                    max(math.ceil(nmin/lmin), math.ceil(nmin*lmax), 
+                        math.ceil(nmax*lmin), math.ceil(nmax*lmax))
                 ]
                 self.exp2.project(rmin, rmax)
 
@@ -227,14 +219,14 @@ class Constraint :
         return str(self.exp)
     
     def prune(self) :
-        [min,max] = self.exp.evaluate()
-        self.exp.project( min,max )
+        self.exp.evaluate()
+        self.exp.project(1,1)
 
 #====================================================================
 
 x = IntVar('x', 2,6)
 y = IntVar('y',-2,5)
-z = IntVar('y', 1,3)
+z = IntVar('z', 1,3)
 
 i1  = SearchInstance(
         [x,y,z],
