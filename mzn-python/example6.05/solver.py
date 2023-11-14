@@ -76,6 +76,13 @@ class IntVar (Operable) :
         else :
             return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
 
+    # #--------------------------------------------------------------
+    # def __str__(self) -> str:
+    #     if self.name == "_" :
+    #         return str(self.min)
+    #     else :
+    #         return str(self.name)
+
     #--------------------------------------------------------------
     def setge(self, val) :
         self.min = max(self.min, val)
@@ -203,6 +210,22 @@ class Expression (Operable):
                 else :
                     [self.min, self.max] = [0,1]
 
+            case "&" :
+                if lmin >= 1 and rmin >= 1 :
+                    self.min = self.max = 1
+                elif lmax <= 0 or rmax <= 0 :
+                    self.min = self.max = 0
+                else :
+                    [self.min, self.max] = [0,1]
+
+            case "|" :
+                if lmin >= 1 or rmin >= 1 :
+                    self.min = self.max = 1
+                elif lmax <= 0 and rmax <= 0 :
+                    self.min = self.max = 0
+                else :
+                    [self.min, self.max] = [0,1]
+
             case "+" :
                 [self.min, self.max] = [lmin+rmin , lmax+rmax]
             case "-" :
@@ -268,6 +291,25 @@ class Expression (Operable):
                     if self.exp1.project( lmin  , rmax-1 ) is False : return False
                     if self.exp2.project( lmin+1, rmax   ) is False : return False
 
+            case "&" :
+                if nmin == nmax == 1 :
+                    if self.exp1.project( 1, lmax ) is False : return False
+                    if self.exp2.project( 1, rmax ) is False : return False
+                if nmin == nmax == 0 :
+                    if rmin == rmax == 1 :
+                        if self.exp1.project( lmin, 0 ) is False : return False
+                    if lmin == lmax == 1 :
+                        if self.exp2.project( rmin, 0 ) is False : return False
+            case "|" :
+                if nmin == nmax == 1 :
+                    if rmin == rmax == 0 :
+                        if self.exp1.project( 1, lmax ) is False : return False
+                    if lmin == lmax == 0 :
+                        if self.exp2.project( 1, rmax ) is False : return False
+                if nmin == nmax == 0 :
+                    if self.exp1.project( lmin, 0 ) is False : return False
+                    if self.exp2.project( rmin, 0 ) is False : return False
+
             case "+" :
                 if self.exp1.project( nmin-rmax , nmax-rmin ) is False : return False
                 if self.exp2.project( nmin-lmax , nmax-lmin ) is False : return False
@@ -306,19 +348,37 @@ class Constraint :
         return str(self.exp)
     
     def prune(self) :
-        [min, max] = self.exp.evaluate()
+        self.exp.evaluate()
         return self.exp.project(1,1)
 
 #====================================================================
 
-x   = IntVar('x', 1,4)
-y   = IntVar('y', 3,6)
+x   = IntVar('x', 1,3)
+y   = IntVar('y', 1,3)
+z   = IntVar('z', 1,3)
 
-c1 = Constraint((y < x) == 0)
+ux  = IntVar('ux', 0,1)
+uy  = IntVar('uy', 0,1)
+uz  = IntVar('uz', 0,1)
 
-i1  = SearchInstance([x,y],[c1])
+gx  = Constraint(
+    ux == ((y <= z) & (x >= z))
+)
 
-i1.propagate()
+gy  = Constraint(
+    uy == ((x <= y) & (y >= z))
+)
+
+gz  = Constraint(
+    uz == (x + y == z)
+)
+
+c   = Constraint(
+    x != (y+z)
+)
+
+i   = SearchInstance([x,y,z,ux,uy,uz],[gx,gy,gz,c])
+
+i.propagate()
 
 #====================================================================
-
