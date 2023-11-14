@@ -222,12 +222,21 @@ class Expression (Operable):
 
         match self.oper :
             case "==" :
-                self.exp1.project( max(lmin,rmin), min(lmax,rmax) )
-                self.exp2.project( max(lmin,rmin), min(lmax,rmax) )
+                if nmin == nmax == 1 :
+                    self.exp1.project( max(lmin,rmin), min(lmax,rmax) )
+                    self.exp2.project( max(lmin,rmin), min(lmax,rmax) )
+                if nmin == nmax == 0 :
+                    if lmin == lmax == rmin == rmax :
+                        self.exp1.project( lmin+1 , lmax )
+                        self.exp2.project( rmin+1 , rmax )
             case "!=" : 
-                if lmin == lmax == rmin == rmax :
-                    self.exp1.project( lmin+1 , lmax )
-                    self.exp2.project( rmin+1 , rmax )
+                if nmin == nmax == 1 :
+                    if lmin == lmax == rmin == rmax :
+                        self.exp1.project( lmin+1 , lmax )
+                        self.exp2.project( rmin+1 , rmax )
+                if nmin == nmax == 0 :
+                    self.exp1.project( max(lmin,rmin), min(lmax,rmax) )
+                    self.exp2.project( max(lmin,rmin), min(lmax,rmax) )
             case "<" :
                 self.exp1.project( lmin  , rmax-1 )
                 self.exp2.project( lmin+1, rmax   )
@@ -279,18 +288,16 @@ class Constraint :
     
     def prune(self) :
         [min, max] = self.exp.evaluate()
-        self.exp.project(min,max)
+        self.exp.project(1,1)
 
 #====================================================================
 
-x   = IntVar('x', 1,5)
-y   = IntVar('y', 3,9)
-u   = IntVar('u', 0,1)
+x   = IntVar('x', 1,4)
+y   = IntVar('y', 3,6)
 
-c1 = Constraint(x != y)
-c2 = Constraint(y > x+7)
+c1 = Constraint((x != y)==1)
 
-i1  = SearchInstance([x,y],[c1,c2])
+i1  = SearchInstance([x,y],[c1])
 
 i1.propagate()
 
