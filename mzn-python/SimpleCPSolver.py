@@ -1,10 +1,12 @@
-# Draft of Simple Constraint Programming Solver
-# Future work of this project will be in SimpleCPSolver.py file
-
-import os, copy, math
-os.system("clear")4
-
 #====================================================================
+# 
+# Simple Constraint Programming Solver V1.0
+# Gonzalo Hernandez
+# 
+# This file is inherited from solver.py
+#====================================================================
+
+import copy, math
 
 def printlist(ls) :
     print("[ ",end="")
@@ -105,43 +107,6 @@ class IntVar (Operable) :
     def project(self, newmin, newmax) :
         self.setge(newmin)
         self.setle(newmax)
-
-#====================================================================
-
-class SearchInstance :
-    def __init__(self, vars, cons) -> None:
-        self.vars = vars
-        self.cons = cons
-    
-    #--------------------------------------------------------------
-    def propagate(self) :
-        for c in self.cons :
-            if c.prune() is False : return None
-        
-        for v in self.vars :
-            if v.isFailed() :
-                return None
-        
-        assigned = True
-        for v in self.vars :
-            if not v.isAssigned() :
-                assigned = False
-        
-        if assigned :
-            printlist(self.vars)
-            return self.vars
-        else :
-            for i,v in enumerate(self.vars) :
-                if not v.isAssigned():
-                    left    = copy.deepcopy(self)
-                    right   = copy.deepcopy(self)
-
-                    left    .vars[i].setle(right.vars[i].min)
-                    right   .vars[i].setge(right.vars[i].min+1)
-
-                    left    .propagate()
-                    right   .propagate()
-                    break
 
 #====================================================================
 
@@ -356,32 +321,40 @@ class Constraint :
 
 #====================================================================
 
-x   = IntVar('x', 1,3)
-y   = IntVar('y', 1,3)
-z   = IntVar('z', 1,3)
+class SearchInstance :
+    def __init__(self, vars, cons) -> None:
+        self.vars = vars
+        self.cons = cons
+    
+    #--------------------------------------------------------------
+    def propagate(self) :
+        for c in self.cons :
+            if c.prune() is False : return None
+        
+        for v in self.vars :
+            if v.isFailed() :
+                return None
+        
+        assigned = True
+        for v in self.vars :
+            if not v.isAssigned() :
+                assigned = False
+        
+        if assigned :
+            printlist(self.vars)
+            return self.vars
+        else :
+            for i,v in enumerate(self.vars) :
+                if not v.isAssigned():
+                    left    = copy.deepcopy(self)
+                    right   = copy.deepcopy(self)
 
-ux  = IntVar('ux', 0,1)
-uy  = IntVar('uy', 0,1)
-uz  = IntVar('uz', 0,1)
+                    left    .vars[i].setle(right.vars[i].min)
+                    right   .vars[i].setge(right.vars[i].min+1)
 
-gx  = Constraint(
-    ux == ((y <= z) & (x >= z))
-)
-
-gy  = Constraint(
-    uy == ((x <= y) & (y >= z))
-)
-
-gz  = Constraint(
-    uz == (x + y == z)
-)
-
-c   = Constraint(
-    x != (y+z)
-)
-
-i   = SearchInstance([x,y,z,ux,uy,uz],[gx,gy,gz,c])
-
-i.propagate()
+                    left    .propagate()
+                    right   .propagate()
+                    break
 
 #====================================================================
+
