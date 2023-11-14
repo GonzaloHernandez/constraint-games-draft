@@ -9,7 +9,7 @@ z = IntVar('z',1,5)
 
 s = SearchInstance([x, y, z],[
     Constraint( x == y + 1 ),
-    Constraint( z >= x * 2 )
+    Constraint( z >= x * y )
 ])
 
 s.propagate()
