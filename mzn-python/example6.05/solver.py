@@ -163,6 +163,14 @@ class Expression (Operable):
                 else :
                     [self.min, self.max] = [0,1]
 
+            case "!=" :
+                if lmax<rmin or rmax<lmin :
+                    self.min = self.max = 1
+                elif lmin==rmin and lmax==rmax :
+                    self.min = self.max = 0
+                else :
+                    [self.min, self.max] = [0,1]
+
             case "<" :
                 if lmax < rmin :
                     self.min = self.max = 1
@@ -216,21 +224,16 @@ class Expression (Operable):
             case "==" :
                 self.exp1.project( max(lmin,rmin), min(lmax,rmax) )
                 self.exp2.project( max(lmin,rmin), min(lmax,rmax) )
+            case "!=" : 
+                if lmin == lmax == rmin == rmax :
+                    self.exp1.project( lmin+1 , lmax )
+                    self.exp2.project( rmin+1 , rmax )
             case "<" :
-                if min == 1 :
-                    self.exp1.project( lmin  , rmax-1 )
-                    self.exp2.project( lmin+1, rmax   )
-                if max == 0 :
-                    self.exp1.project( rmin, lmax )
-                    self.exp2.project( rmin, lmax )                    
+                self.exp1.project( lmin  , rmax-1 )
+                self.exp2.project( lmin+1, rmax   )
             case ">" :
-                if min == 1 :
-                    self.exp1.project( rmin+1, lmax   )
-                    self.exp2.project( rmin  , lmax-1 )
-                if max == 0 :
-                    self.exp1.project( lmin, rmax )
-                    self.exp2.project( lmin, rmax )
-
+                self.exp1.project( rmin+1, lmax   )
+                self.exp2.project( rmin  , lmax-1 )
             case "<=" :
                 self.exp1.project( lmin, rmax )
                 self.exp2.project( lmin, rmax )
@@ -270,7 +273,6 @@ class Expression (Operable):
 class Constraint :
     def __init__(self, exp) -> None:
         self.exp = exp
-        self.reif = IntVar("_",0,1)
 
     def __str__(self) -> str:
         return str(self.exp)
@@ -278,38 +280,17 @@ class Constraint :
     def prune(self) :
         [min, max] = self.exp.evaluate()
         self.exp.project(min,max)
-        self.reif.project(min,max)
-
-    def getReif(self,name) :
-        self.reif.name = name
-        return self.reif
 
 #====================================================================
 
-x   = IntVar('x', 1,3)
-y   = IntVar('y', 1,3)
-z   = IntVar('z', 1,3)
-ux  = IntVar('ux', 0,1)
-uy  = IntVar('uy', 0,1)
-uz  = IntVar('uz', 0,1)
+x   = IntVar('x', 1,5)
+y   = IntVar('y', 3,9)
+u   = IntVar('u', 0,1)
 
-gx  = Constraint(x == y*z)
-gy  = Constraint(y == x*z)
-gz  = Constraint(x*y <= z)
+c1 = Constraint(x != y)
+c2 = Constraint(y > x+7)
 
-rx   = gx.getReif("rx")
-ry   = gy.getReif("ry")
-rz   = gz.getReif("rz")
-
-i1  = SearchInstance(
-        [x,y,z,ux,uy,uz],
-        [
-            Constraint(ux==rx), Constraint(uy==ry), Constraint(uz==rz),
-            # gx,gy,gz
-        ]
-    )
-
-i2 = copy.deepcopy(i1)
+i1  = SearchInstance([x,y],[c1,c2])
 
 i1.propagate()
 

@@ -1,9 +1,9 @@
 import os
 os.system("clear")
 
-a = 5
-b = 7
+a = 2
+b = 2
+c = 2
 
-c = a // b
-
-print(c)
+if a == b == c :
+    print("yes")
