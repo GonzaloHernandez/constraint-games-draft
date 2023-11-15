@@ -131,7 +131,7 @@ class Expression (Operable):
         match self.oper :
 
             case "==" :
-                if lmin==rmin and lmax==rmax :
+                if lmin == rmin == lmax == rmax :
                     self.min = self.max = 1
                 elif lmin > rmax or rmin > lmax :
                     self.min = self.max = 0
@@ -141,7 +141,7 @@ class Expression (Operable):
             case "!=" :
                 if lmax<rmin or rmax<lmin :
                     self.min = self.max = 1
-                elif lmin==rmin and lmax==rmax :
+                elif lmin == rmin == lmax == rmax :
                     self.min = self.max = 0
                 else :
                     [self.min, self.max] = [0,1]
