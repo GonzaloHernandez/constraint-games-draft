@@ -72,14 +72,14 @@ class IntVar (Operable) :
         self.min    = min
         self.max    = max
 
-    #--------------------------------------------------------------
-    def __str__(self) -> str:
-        if self.isFailed() :
-            return f"{self.name}()"
-        elif self.isAssigned() :
-            return f"{self.name}{{{str(self.min)}}}"
-        else :
-            return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
+    # #--------------------------------------------------------------
+    # def __str__(self) -> str:
+    #     if self.isFailed() :
+    #         return f"{self.name}()"
+    #     elif self.isAssigned() :
+    #         return f"{self.name}{{{str(self.min)}}}"
+    #     else :
+    #         return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
 
     # #--------------------------------------------------------------
     # def __str__(self) -> str:
@@ -87,6 +87,15 @@ class IntVar (Operable) :
     #         return str(self.min)
     #     else :
     #         return str(self.name)
+
+    #--------------------------------------------------------------
+    def __str__(self) -> str:
+        if self.isFailed() :
+            return "_"
+        elif self.isAssigned() :
+            return f"{self.min}"
+        else :
+            return f"{{{str(self.min)}..{str(self.max)}}}"
 
     #--------------------------------------------------------------
     def setge(self, val) :

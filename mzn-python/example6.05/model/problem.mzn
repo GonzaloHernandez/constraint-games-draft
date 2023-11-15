@@ -1,6 +1,8 @@
 enum P = {X,Y,Z};
-set of int : D = 1..3;
-array [P] of var D      : S;
+set of int : Dx = 1..9;
+set of int : Dy = 1..9;
+set of int : Dz = 1..3;
+array [P] of var int    : S;
 array [P] of var bool   : U;
 
 %---------------------------------------------
@@ -8,6 +10,11 @@ array [P] of var bool   : U;
 var int : x = S[X];
 var int : y = S[Y];
 var int : z = S[Z];
+
+constraint
+    x in Dx /\
+    y in Dy /\
+    z in Dz;
 
 %---------------------------------------------
 
