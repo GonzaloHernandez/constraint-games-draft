@@ -1,19 +1,35 @@
-import os, asyncio
+import os
+import asyncio
+from random import randrange
 os.system("clear")
 
 from minizinc import Instance, Model, Solver
 
 solver      = Solver.lookup("gecode")
-mznProblem  = "./example6.01/model/problem.mzn"
+nPlayers    = 5
+nStrategies = 5
+mznProblem  = "./solving/example4.21/model/problem.mzn"
 
-P   = set(range(1,3))
-PNE = []
+P = set(range(0,nPlayers))
 
 #--------------------------------------------------------------------
 
+PNE = []
+
 async def CG_enum() :
 
-    model       = Model(mznProblem)
+    model   = Model(mznProblem)
+
+    text = (
+    """
+    solve :: int_search(V, input_order, indomain_min)
+        satisfy;
+    """
+    )
+
+    model.add_string(text)
+    model["n"]  = nPlayers
+    model["s"]  = nStrategies
     instance    = Instance(solver, model)
 
     async for result in instance.solutions(all_solutions=True) :
@@ -42,21 +58,26 @@ async def devC_G(s,u,i) :
 
     text = (
     """
-    int             : p  = {};
-    array [P] of D  : Vs = {};
-    array [P] of B  : Us = {};
+    int                     : p  = {};
+    array [P] of S          : Vs = array1d(0..n-1, {});
+    array [P] of AmountS    : Us = array1d(0..n-1, {});
+
+    constraint
+        U[p] > Us[p];
 
     constraint
         forall(i in P where i != p)(
             V[i] = Vs[i]
         );
 
-    constraint
-        U[p] = true;
+    solve :: int_search(V, input_order, indomain_random)
+        maximize U[p];
     """
     ).format(i,s,u)
 
     model.add_string(text)
+    model["n"]  = nPlayers
+    model["s"]  = nStrategies
     instance    = Instance(solver, model)
 
     async for result in instance.solutions(all_solutions=False) :

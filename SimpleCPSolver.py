@@ -317,41 +317,31 @@ class Expression (Operable) :
 
 #====================================================================
 
-class sum (Expression) :
-    def __init__(self, vars) -> None:
-        super().__init__(None, "sum", None)
-        self.exp1 = vars[0]
-        for i in range(1,len(vars)):
-            self.exp1 = self.exp1 + vars[i]
-    
-    def evaluate(self):
-        self.exp1.evaluate()
-    
-    def project(self, nmin, nmax):
-        self.exp1.project(min, max)
+def sum(vars) :
+    exp = vars[0]
+    for i in range(1,len(vars)):
+        exp = exp + vars[i]
+    return exp
+
+def count(vars,cond) :
+    exp = vars[0]==cond
+    for i in range(1,len(vars)):
+        exp = exp + (vars[i]==cond)
+    return exp
+
+def alldifferent(vars) :
+    exp = IntVar("",1,1)
+    for i in range(len(vars)):
+        for j in range(len(vars)):
+            if (i != j) : 
+                exp = exp & (vars[i] != vars[j])
+    return exp
 
 #====================================================================
 
 class Constraint :
     def __init__(self, exp) -> None:
         self.exp = exp
-
-    def __str__(self) -> str:
-        return str(self.exp)
-    
-    def prune(self) :
-        self.exp.evaluate()
-        return self.exp.project(1,1)
-
-#====================================================================
-
-class AllDifferent :
-    def __init__(self, vars) -> None:
-        self.exp = IntVar("",1,1)
-        for i in range(len(vars)):
-            for j in range(len(vars)):
-                if (i != j) : 
-                    self.exp = self.exp & (vars[i] != vars[j])
 
     def __str__(self) -> str:
         return str(self.exp)

@@ -1,8 +1,9 @@
 import os
 os.system("clear")
 
-from SimpleCPSolver import IntVar, Constraint, SearchInstance, AllDifferent
-from SimpleCPSolver import sum
+from SimpleCPSolver import IntVar, Constraint, SearchInstance
+from SimpleCPSolver import sum,count,alldifferent
+
 
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)
@@ -29,11 +30,7 @@ gz = Constraint(
 
 s = SearchInstance(
     [x,y,z,ux,uy,uz],
-    [gx,gy,gz,
-        AllDifferent([x,y,z]),
-        Constraint(sum([x,y,z]) == 3)
-    ]
+    [gx,gy,gz]
 )
 
 s.search()
-

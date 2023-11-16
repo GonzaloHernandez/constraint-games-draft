@@ -1,2 +1,2 @@
 .venv
-./mzn-python/.venv
+__pycache__

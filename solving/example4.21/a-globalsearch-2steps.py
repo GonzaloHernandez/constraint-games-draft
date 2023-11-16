@@ -6,8 +6,8 @@ from minizinc import Instance, Model, Solver
 solver      = Solver.lookup("gecode")
 nPlayers    = 5
 nStrategies = 5
-mznGameFile = "./example4.21/model/problem.mzn"
-mznPNEFile  = "./example4.21/model/pne.mzn"
+mznGameFile = "./solving/example4.21/model/problem.mzn"
+mznPNEFile  = "./solving/example4.21/model/pne.mzn"
 
 print("\n-------------- Step 1 ---------------")
 

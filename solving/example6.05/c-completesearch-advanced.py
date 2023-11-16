@@ -41,7 +41,7 @@ n       = 3
 
 def findBestResponse(t,i) :
     solver  = minizinc.Solver.lookup("gecode")
-    model   = minizinc.Model("./example6.05/model/problem.mzn")
+    model   = minizinc.Model("./solving/example6.05/model/problem.mzn")
 
     text = (
     """

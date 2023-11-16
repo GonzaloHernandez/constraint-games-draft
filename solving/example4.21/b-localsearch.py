@@ -1,4 +1,5 @@
 import os
+import warnings
 from random import randrange
 os.system("clear")
 
@@ -7,54 +8,61 @@ from minizinc import Instance, Model, Solver
 solver      = Solver.lookup("gecode")
 nPlayers    = 5
 nStrategies = 5
-mznProblem  = "./example4.21/model/problem.mzn"
+mznFile     = "./solving/example4.21/model/problem.mzn"
 maxStep     = 20
 
 P = set(range(0,nPlayers))
+T = []
 
 #--------------------------------------------------------------------
 
-def CG_enum() :
-    PNE = []
-
-    model   = Model(mznProblem)
+def CG_IBR() :
+    model           = Model(mznFile)
 
     text = (
     """
-    solve :: int_search(V, input_order, indomain_random)
+    solve :: int_search(V, input_order, indomain_max)
         satisfy;
     """
     )
 
     model.add_string(text)
+
     instance        = Instance(solver, model)
     instance["n"]   = nPlayers
     instance["s"]   = nStrategies
     solution        = instance.solve()
-    try     : s,u   = solution["V"],solution["U"]
-    except  : s     = None
+    if solution != None :
+        s,u = solution["V"],solution["U"]
+    
+        step = 0
+        while step < maxStep :
+            s_ = neighborIBR(s,u,P)
+            T.append(s_)
+            if s_ != None :
+                s = s_
+            else :
+                return s
+            step += 1
 
-    while s != None :
-        if isPNE(s,u) :
-            PNE.append(s)
-
-        solution        = instance.solve()
-        try     : s,u   = solution["V"],solution["U"]
-        except  : s     = None
-    return PNE
-
-#--------------------------------------------------------------------
-
-def isPNE(s,u) :
-    for i in P :
-        if devC_G(s,u,i) :
-            return False
-    return True
+    return None
 
 #--------------------------------------------------------------------
 
-def devC_G(s,u,i) :
-    model   = Model(mznProblem)
+def neighborIBR(s,u,P) :
+    while len(P) > 0 :
+        i = list(P)[randrange(len(P))]
+        s_= findBRC_G(s,u,i)
+        if s_ != None and not T.__contains__(s_):
+            T.append(s_)
+            return s_
+        P.remove(i)
+    return None
+
+#--------------------------------------------------------------------
+
+def findBRC_G(s,u,i) :
+    model           = Model(mznFile)
 
     text = (
     """
@@ -70,30 +78,28 @@ def devC_G(s,u,i) :
             V[i] = Vs[i]
         );
 
-    solve :: int_search(V, input_order, indomain_random)
+    solve :: int_search(V, input_order, indomain_min)
         maximize U[p];
     """
     ).format(i,s,u)
 
     model.add_string(text)
+
     instance        = Instance(solver, model)
     instance["n"]   = nPlayers
     instance["s"]   = nStrategies
-    solution        = instance.solve()
-    try     : s_    = solution["V"]; 
-    except  : s_    = None
+ 
+    with warnings.catch_warnings() : 
+        warnings.simplefilter("ignore")
+        solution    = instance.solve()
 
-    if s_ != None :
-        if s_ == s :
-            return False
-        else :
-            return True
+    if solution.__len__() == 0 :
+        return None
     else :
-        return False
+        return solution["V"]
 
 #--------------------------------------------------------------------
 
-ss = CG_enum()
+s = CG_IBR()
 
-for s in ss :
-    print(s)
+print("PNE Strategy:       " + str(s))

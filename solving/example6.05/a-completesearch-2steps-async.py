@@ -3,7 +3,7 @@ import os, minizinc, asyncio
 os.system("clear")
 
 solver      = minizinc.Solver.lookup("gecode")
-model       = minizinc.Model("./example6.05/model/problem.mzn")
+model       = minizinc.Model("./solving/example6.05/model/problem.mzn")
 
 #-------------------------------------------------------------- Step 1
 
