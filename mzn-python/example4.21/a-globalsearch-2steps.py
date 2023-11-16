@@ -20,9 +20,9 @@ start   = time.time()
 resGame = insGame.solve(all_solutions=True)
 end     = time.time()
 
-# for i in range(len(resGame)) :
-#     print(resGame[i,"V"],end=",")
-#     print(resGame[i,"U"])
+for i in range(len(resGame)) :
+    print(resGame[i,"V"],end=",")
+    print(resGame[i,"U"])
 print(f"Total solutions: {len(resGame)} [{(end-start):.2f}sg]")
 
 #-----------------------------------------------

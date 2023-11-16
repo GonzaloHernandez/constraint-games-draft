@@ -1,8 +1,7 @@
 import os, sys
 os.system("clear")
 
-sys.path.insert(1, '.')
-from SimpleCPSolver import IntVar, Constraint, SearchInstance
+from SimpleCPSolver_tailored import IntVar, Constraint, SearchInstance
 
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)

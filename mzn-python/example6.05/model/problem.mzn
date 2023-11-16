@@ -1,9 +1,10 @@
 enum P = {X,Y,Z};
+set of int : B  = 0..1; % Boolean {false,true}
 set of int : Dx = 1..9;
 set of int : Dy = 1..9;
 set of int : Dz = 1..3;
 array [P] of var int    : S;
-array [P] of var bool   : U;
+array [P] of var B      : U;
 
 %---------------------------------------------
 
@@ -34,3 +35,6 @@ constraint
         /\
         ((x+1)*(y+1) != 3*z)    
     );
+
+solve :: int_search(S, input_order, indomain_min)
+      satisfy;
