@@ -1,7 +1,8 @@
 import os, sys
 os.system("clear")
 
-from SimpleCPSolver_tailored import IntVar, Constraint, SearchInstance
+sys.path.insert(1,".")
+from SimpleCPSolver import IntVar, Constraint, SearchInstance
 
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)
@@ -28,13 +29,7 @@ gz = Constraint(
 
 s = SearchInstance(
     [x,y,z,ux,uy,uz],
-    [gx,gy,gz,
-        # Constraint(
-        #     (x==1) & 
-        #     (y==1) &
-        #     (uz==1)
-        # )
-    ]
+    [gx,gy,gz]
 )
 
-s.propagate()
+s.search()

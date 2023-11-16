@@ -119,7 +119,7 @@ class IntVar (Operable) :
 
 #====================================================================
 
-class Expression (Operable):
+class Expression (Operable) :
     def __init__(self, exp1, oper, exp2) -> None:
         self.exp1 = exp1
         self.oper = oper
@@ -317,9 +317,41 @@ class Expression (Operable):
 
 #====================================================================
 
+class sum (Expression) :
+    def __init__(self, vars) -> None:
+        super().__init__(None, "sum", None)
+        self.exp1 = vars[0]
+        for i in range(1,len(vars)):
+            self.exp1 = self.exp1 + vars[i]
+    
+    def evaluate(self):
+        self.exp1.evaluate()
+    
+    def project(self, nmin, nmax):
+        self.exp1.project(min, max)
+
+#====================================================================
+
 class Constraint :
     def __init__(self, exp) -> None:
         self.exp = exp
+
+    def __str__(self) -> str:
+        return str(self.exp)
+    
+    def prune(self) :
+        self.exp.evaluate()
+        return self.exp.project(1,1)
+
+#====================================================================
+
+class AllDifferent :
+    def __init__(self, vars) -> None:
+        self.exp = IntVar("",1,1)
+        for i in range(len(vars)):
+            for j in range(len(vars)):
+                if (i != j) : 
+                    self.exp = self.exp & (vars[i] != vars[j])
 
     def __str__(self) -> str:
         return str(self.exp)
@@ -336,7 +368,7 @@ class SearchInstance :
         self.cons = cons
     
     #--------------------------------------------------------------
-    def propagate(self) :
+    def search(self) :
         for c in self.cons :
             if c.prune() is False : return None
         
@@ -361,9 +393,8 @@ class SearchInstance :
                     left    .vars[i].setle(right.vars[i].min)
                     right   .vars[i].setge(right.vars[i].min+1)
 
-                    left    .propagate()
-                    right   .propagate()
+                    left    .search()
+                    right   .search()
                     break
 
 #====================================================================
-

@@ -2,7 +2,7 @@ import os, minizinc, asyncio
 
 os.system("clear")
 
-#-------------------------------------------------------------- Step 1
+#--------------------------------------------------------------
 
 from SimpleCPSolver_tailored import IntVar, Constraint, printlist
 import copy
@@ -73,7 +73,6 @@ def findBestResponse(t,i) :
         s = inst[i,"S"]
         d.append(s)
     return d
-
 
 #--------------------------------------------------------------
 
@@ -155,14 +154,14 @@ class SearchInstance :
 
                     if cnt[i_] <= 0 :
                         checkEndOfTable(vars, i_)
+
                     break
 
 #====================================================================
 
 s = SearchInstance(
     [x,y,z,ux,uy,uz],
-    [gx,gy,gz
-    ]
+    [gx,gy,gz]
 )
 
 s.propagate(0)
