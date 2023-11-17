@@ -1,10 +1,12 @@
-import os, minizinc, asyncio
+import os,sys
 
 os.system("clear")
 
 #--------------------------------------------------------------
 
-from SimpleCPSolver_tailored import IntVar, Constraint, printlist
+sys.path.insert(1,".")
+
+from SimpleCPSolver import IntVar, Constraint, solveModel, printlist
 import copy
 
 x   = IntVar( 'x',1,9)
@@ -30,6 +32,10 @@ gz = Constraint(
     )
 )
 
+V   = [ x, y, z]
+U   = [ux,uy,uz]
+G   = [gx,gy,gz]
+
 #--------------------------------------------------------------
 
 Nash    = []
@@ -40,38 +46,21 @@ n       = 3
 #--------------------------------------------------------------
 
 def findBestResponse(t,i) :
-    solver  = minizinc.Solver.lookup("gecode")
-    model   = minizinc.Model("./solving/example6.05/model/problem.mzn")
 
-    text = (
-    """
-    int              : pi;
-    P                : p = P[pi];
-    array [P] of int : S_;
+    C = []
+    for j in range(len(V)) :
+        if j != i :
+            C.append( Constraint( V[j] == t[j] ) )
 
-    constraint
-	    forall(i in P where i != p)(
-		    S_[i] = S[i]
-    	);
+    C.append( Constraint( U[i] == 1 ))
+ 
+    S = solveModel( V+U , G+C )
 
-    constraint
-	    U[p] = 1;
-    """
-    )
-
-    model.add_string(text)
-
-    inst    = minizinc.Instance(solver, model)
-
-    inst["pi"] = i
-    inst["S_"] = t
     d = []
 
-    inst = inst.solve(all_solutions=True)
+    for s in S :
+        d.append([s[0].min, s[1].min, s[2].min])
 
-    for i in range(len(inst)):
-        s = inst[i,"S"]
-        d.append(s)
     return d
 
 #--------------------------------------------------------------
@@ -92,7 +81,7 @@ def checkNash(t,i) :
 #--------------------------------------------------------------
 
 def search_table(t,i) :
-    if t in BR[i-1] :
+    if t in BR[i] :
         return t
     return None
 
@@ -100,7 +89,7 @@ def search_table(t,i) :
 
 def insert_table(i,d) :
     for t in d :
-        BR[i-1].append(t)
+        BR[i].append(t)
 
 #--------------------------------------------------------------
 
@@ -111,57 +100,51 @@ def checkEndOfTable(A,i) :
 
 #--------------------------------------------------------------
 
-class SearchInstance :
+class SearchInstanceTailored :
     def __init__(self, vars, cons) -> None:
         self.vars = vars
         self.cons = cons
     
     #--------------------------------------------------------------
-    def propagate(self,i_) :
+    def search(self, i) :
         for c in self.cons :
-            if c.prune() is False : return None
+            if c.prune() is False : return []
         
         for v in self.vars :
             if v.isFailed() :
-                return None
+                return []
         
-        assigned = True
-        for v in self.vars :
-            if not v.isAssigned() :
-                assigned = False
-        
-        if assigned :
-            printlist(self.vars)
-            checkNash([self.vars[0].min, self.vars[1].min, self.vars[2].min], n)
-            return self.vars
+        if i==n :
+            checkNash([self.vars[0].min, self.vars[1].min, self.vars[2].min], n-1)
+            return [self.vars]
         else :
-            BR[i_] = []
-            match i_ :
-                case 0 : cnt[i_] = 27
-                case 1 : cnt[i_] = 9
-                case 2 : cnt[i_] = 1
-            
-            for i,v in enumerate(self.vars) :
-                if not v.isAssigned():
-                    left    = copy.deepcopy(self)
-                    right   = copy.deepcopy(self)
+            BR[i]   = []
+            cnt[i]  = 1
+            for j in range(i+1,len(V)) :
+                cnt[i] *= V[j].card()
 
-                    left    .vars[i].setle(right.vars[i].min)
-                    right   .vars[i].setge(right.vars[i].min+1)
+            s = []
+            min = self.vars[i].min
+            while self.vars[i].card()>0 :
+                branch = copy.deepcopy(self)
+ 
+                min = max(min, self.vars[i].min)
+ 
+                self.vars[i].setle( min )
 
-                    left    .propagate(i_+1)
-                    right   .propagate(i_+1)
+                s += branch.search(i+1)
 
-                    if cnt[i_] <= 0 :
-                        checkEndOfTable(vars, i_)
-
-                    break
+                if cnt[i] <= 0 :
+                    checkEndOfTable(vars, i)
+                min += 1
+            return  s
 
 #====================================================================
 
-s = SearchInstance(
-    [x,y,z,ux,uy,uz],
-    [gx,gy,gz]
-)
+def solveModelTailored(vars, cons) :
+    model = copy.deepcopy([vars,cons])
+    s = SearchInstanceTailored(model[0],model[1])
+    return s.search(0)
 
-s.propagate(0)
+
+S = solveModelTailored( V, G)

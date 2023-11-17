@@ -2,7 +2,7 @@ import os, sys
 os.system("clear")
 
 sys.path.insert(1,".")
-from SimpleCPSolver import IntVar, Constraint, SearchInstance
+from SimpleCPSolver import IntVar, Constraint, solveModel, printlist
 
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)
@@ -27,9 +27,11 @@ gz = Constraint(
     )
 )
 
-s = SearchInstance(
-    [x,y,z,ux,uy,uz],
-    [gx,gy,gz]
-)
+V   = [ x, y, z]
+U   = [ux,uy,uz]
+G   = [gx,gy,gz]
 
-s.search()
+S = solveModel( V+U, G )
+
+for s in S:
+    printlist(s)

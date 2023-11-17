@@ -1,9 +1,7 @@
-import os
+import os, copy
 os.system("clear")
 
-from SimpleCPSolver import IntVar, Constraint, SearchInstance
-from SimpleCPSolver import sum,count,alldifferent
-
+from SimpleCPSolver import *
 
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)
@@ -28,9 +26,16 @@ gz = Constraint(
     )
 )
 
-s = SearchInstance(
-    [x,y,z,ux,uy,uz],
-    [gx,gy,gz]
-)
+V   = [ x, y, z]
+U   = [ux,uy,uz]
+G   = [gx,gy,gz]
 
-s.search()
+cnt = []
+
+for vi in range(len(V)) :
+    cnt.append(1)
+    for vj in range(len(V)) :
+        if vj>vi :
+            cnt[vi] *= V[vj].card()
+
+print(cnt)

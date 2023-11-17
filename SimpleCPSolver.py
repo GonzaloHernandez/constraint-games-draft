@@ -8,11 +8,6 @@
 
 import copy, math
 
-def printlist(ls) :
-    print("[ ",end="")
-    for l in ls : print(l,end=" ")
-    print("]")
-
 #====================================================================
 
 class Operable :
@@ -109,6 +104,9 @@ class IntVar (Operable) :
     
     def isFailed(self) :
         return (self.min>self.max)
+    
+    def card(self) :
+        return self.max - self.min + 1
     
     def evaluate(self) :
         return [self.min, self.max]
@@ -317,28 +315,6 @@ class Expression (Operable) :
 
 #====================================================================
 
-def sum(vars) :
-    exp = vars[0]
-    for i in range(1,len(vars)):
-        exp = exp + vars[i]
-    return exp
-
-def count(vars,cond) :
-    exp = vars[0]==cond
-    for i in range(1,len(vars)):
-        exp = exp + (vars[i]==cond)
-    return exp
-
-def alldifferent(vars) :
-    exp = IntVar("",1,1)
-    for i in range(len(vars)):
-        for j in range(len(vars)):
-            if (i != j) : 
-                exp = exp & (vars[i] != vars[j])
-    return exp
-
-#====================================================================
-
 class Constraint :
     def __init__(self, exp) -> None:
         self.exp = exp
@@ -360,11 +336,11 @@ class SearchInstance :
     #--------------------------------------------------------------
     def search(self) :
         for c in self.cons :
-            if c.prune() is False : return None
+            if c.prune() is False : return []
         
         for v in self.vars :
             if v.isFailed() :
-                return None
+                return []
         
         assigned = True
         for v in self.vars :
@@ -372,19 +348,66 @@ class SearchInstance :
                 assigned = False
         
         if assigned :
-            printlist(self.vars)
-            return self.vars
+            return [self.vars]
         else :
             for i,v in enumerate(self.vars) :
                 if not v.isAssigned():
                     left    = copy.deepcopy(self)
                     right   = copy.deepcopy(self)
 
-                    left    .vars[i].setle(right.vars[i].min)
+                    left    .vars[i].setle(left .vars[i].min)
                     right   .vars[i].setge(right.vars[i].min+1)
+                    
+                    return left.search() + right.search()
 
-                    left    .search()
-                    right   .search()
-                    break
+
+#====================================================================
+
+def solveModel(vars, cons) :
+    model = copy.deepcopy([vars,cons])
+    s = SearchInstance(model[0],model[1])
+    return s.search()
+
+def IntVarArray(n,prefix,min,max) :
+    vs = []
+    for i in range(n) :
+        vs.append(IntVar(prefix+str(i),min,max))
+    return vs
+
+#--------------------------------------------------------------
+
+def count(vars,cond) :
+    exp = vars[0]==cond
+    for i in range(1,len(vars)):
+        exp = exp + (vars[i]==cond)
+    return exp
+
+#--------------------------------------------------------------
+
+def alldifferent(vars) :
+    exp = vars[0] if len(vars)==1 else None
+    for i in range(len(vars)):
+        for j in range(len(vars)):
+            if (i != j) : 
+                if exp is None :
+                    exp = (vars[i] != vars[j])
+                else :
+                    exp = exp & (vars[i] != vars[j])
+    return exp
+
+#--------------------------------------------------------------
+
+def sum(vars) :
+    exp = vars[0]
+    for i in range(1,len(vars)):
+        exp = exp + vars[i]
+    return exp
+
+#--------------------------------------------------------------
+
+def printlist(ls) :
+    print("[ ",end="")
+    for l in ls : print(l,end=" ")
+    print("]")
 
 #====================================================================
