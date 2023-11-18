@@ -360,7 +360,6 @@ class SearchInstance :
                     
                     return left.search() + right.search()
 
-
 #====================================================================
 
 def solveModel(vars, cons) :

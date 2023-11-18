@@ -45,16 +45,16 @@ n       = 3
 
 #--------------------------------------------------------------
 
-def findBestResponse(t,i) :
+def findBestResponse(t,u,i) :
 
     C = []
     for j in range(len(V)) :
         if j != i :
             C.append( Constraint( V[j] == t[j] ) )
 
-    C.append( Constraint( U[i] == 1 ))
+    C.append( Constraint( U[i] > u[i] ))
  
-    S = solveModel( V+U , G+C )
+    S = solveModel( V + [U[i]] , [G[i]] + C )
 
     d = []
 
@@ -65,23 +65,26 @@ def findBestResponse(t,i) :
 
 #--------------------------------------------------------------
 
-def checkNash(t,i) :
-    if i==0 :
-        Nash.append(t)
+def checkNash(t,u,i) :
+    if i<0 :
+        Nash.append(t+u)
     else :
-        d = search_table(t,i)
-        if d is None :
-            d = findBestResponse(t,i)
+        # d = search_table(t,i)
+        # if d is None :
+            # d = findBestResponse(t,u,i)
             # pendant to insert other not best responses
-            insert_table(i,d)
-            cnt[i-1] -= 1
-        if t in d :
-            checkNash(t,i-1)
+            # insert_table(i,d)
+            # cnt[i-1] -= 1
+        # if t in d :
+        d = findBestResponse(t,u,i)
+        insert_table(i,d)
+        if d == [] :
+            checkNash(t,u,i-1)
 
 #--------------------------------------------------------------
 
 def search_table(t,i) :
-    if t in BR[i] :
+    if t in  BR[i] :
         return t
     return None
 
@@ -94,9 +97,8 @@ def insert_table(i,d) :
 #--------------------------------------------------------------
 
 def checkEndOfTable(A,i) :
-    for a in A :
-        for t in BR[i] :
-            checkNash(t,n)
+    for t in BR[i] :
+        checkNash(t,n-1)
 
 #--------------------------------------------------------------
 
@@ -108,14 +110,17 @@ class SearchInstanceTailored :
     #--------------------------------------------------------------
     def search(self, i) :
         for c in self.cons :
-            if c.prune() is False : return []
+            if c.prune() is False : 
+                return []
         
         for v in self.vars :
             if v.isFailed() :
                 return []
         
         if i==n :
-            checkNash([self.vars[0].min, self.vars[1].min, self.vars[2].min], n-1)
+            t = [self.vars[0].min, self.vars[1].min, self.vars[2].min]
+            u = [self.vars[3].min, self.vars[4].min, self.vars[5].min]
+            checkNash(t,u, n-1)
             return [self.vars]
         else :
             BR[i]   = []
@@ -124,19 +129,18 @@ class SearchInstanceTailored :
                 cnt[i] *= V[j].card()
 
             s = []
-            min = self.vars[i].min
-            while self.vars[i].card()>0 :
+
+            for j in range(self.vars[i].min, self.vars[i].max+1) :
                 branch = copy.deepcopy(self)
  
-                min = max(min, self.vars[i].min)
- 
-                self.vars[i].setle( min )
+                branch.vars[i].setle(j)
+                branch.vars[i].setge(j)
 
                 s += branch.search(i+1)
 
-                if cnt[i] <= 0 :
-                    checkEndOfTable(vars, i)
-                min += 1
+                # if cnt[i] <= 0 :
+                #     checkEndOfTable(branch.vars, i)
+                #     break
             return  s
 
 #====================================================================
@@ -146,5 +150,8 @@ def solveModelTailored(vars, cons) :
     s = SearchInstanceTailored(model[0],model[1])
     return s.search(0)
 
-
-S = solveModelTailored( V, G)
+S = solveModelTailored( V+U, G)
+for n in Nash :
+    print(n)
+print(f"Total solutions: {len(S)}")
+print(f"Total PNE: {len(Nash)}")
