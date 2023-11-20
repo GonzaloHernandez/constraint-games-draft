@@ -367,6 +367,8 @@ def solveModel(vars, cons) :
     s = SearchInstance(model[0],model[1])
     return s.search()
 
+#--------------------------------------------------------------
+
 def IntVarArray(n,prefix,min,max) :
     vs = []
     for i in range(n) :

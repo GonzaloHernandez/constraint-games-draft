@@ -1,7 +1,7 @@
 import os, copy
 os.system("clear")
 
-from SimpleCPSolver import *
+from ConstraintCPSolver import *
 
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)
@@ -30,12 +30,14 @@ V   = [ x, y, z]
 U   = [ux,uy,uz]
 G   = [gx,gy,gz]
 
-cnt = []
-
-for vi in range(len(V)) :
-    cnt.append(1)
-    for vj in range(len(V)) :
-        if vj>vi :
-            cnt[vi] *= V[vj].card()
 
 print(cnt)
+
+
+S = solveModelPNE( V, G)
+
+
+for n in Nash :
+    print(n)
+print(f"Total solutions: {len(S)}")
+print(f"Total PNE: {len(Nash)}")
