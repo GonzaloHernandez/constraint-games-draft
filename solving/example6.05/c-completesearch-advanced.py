@@ -40,13 +40,14 @@ G   = [gx,gy,gz]
 
 Nash    = []
 BR      = [[],[],[]]
-BRu     = [[],[],[]]
 cnt     = [0,0,0]
 n       = 3
+cx      = [0]
+
 
 #--------------------------------------------------------------
 
-def findBestResponse(t,u,i) :
+def findBestResponse(t,i) :
 
     C = []
     for j in range(len(V)) :
@@ -55,46 +56,51 @@ def findBestResponse(t,u,i) :
 
     C.append( Constraint( U[i] == 1 ))
  
-    S = solveModel( V + U , G + C )
+    S_ = solveModel( V + U , G + C )
 
     d = []
 
-    for s in S :
-        d.append([s[0].min, s[1].min, s[2].min, s[3].min, s[4].min, s[5].min])
+    for s in S_ :
+        d.append([s[0].min, s[1].min, s[2].min])
 
     return d
 
 #--------------------------------------------------------------
 
-def checkNash(t,u,i) :
+def checkNash(t,i) :
     if i<0 :
-        Nash.append(t+u)
+        if t not in Nash :
+            Nash.append(t)
     else :
-        d = search_table(t,u,i)
+        d = search_table(t,i)
         if d == [] :
-            d = findBestResponse(t,u,i)
-            # pendant to insert other not best responses
-            insert_table(i,d)
-            cnt[i-1] -= 1
-        if t+u in d :
-            checkNash(t,u,i-1)
+            d = findBestResponse(t,i)
+            
+            if d == [] :
+                C = []
+                for j in range(len(V)) :
+                    if j != i :
+                        C.append( Constraint( V[j] == t[j] ) )
+                        
+                S_ = solveModel(V+U, G+C)
+                for s in S_ :
+                    d.append([s[0].min, s[1].min, s[2].min])
 
-        # d = findBestResponse(t,u,i)
-        # insert_table(i,d)
-        # if d == [] :
-        #     checkNash(t,u,i-1)
+            insert_table(i,d)
+            cnt[i] -= 1
+        if t in d :
+            checkNash(t,i-1)
 
 #--------------------------------------------------------------
 
-def search_table(t,u,i) :
+def search_table(t,i) :
     if len(BR[i]) <= 0 : return []
 
     br = []
 
     for b in range(len(BR[i])) :
         if BR[i][b][1:i]+BR[i][b][i+1:n] == t[1:i]+t[i+1:n]:
-            if BRu[i][b][i] == 1 : # > u[i] :
-                br.append( BR[i][b]+BRu[i][b] )
+            br.append( BR[i][b] )
     return br
 
 #--------------------------------------------------------------
@@ -103,7 +109,6 @@ def insert_table(i,d) :
     for t in d :
         if [t[0],t[1],t[2]] not in BR[i] :
             BR[i].append([t[0],t[1],t[2]])
-            BRu[i].append([t[3],t[4],t[5]])
 
 #--------------------------------------------------------------
 
@@ -130,12 +135,14 @@ class SearchInstanceTailored :
         
         if i==n :
             t = [self.vars[0].min, self.vars[1].min, self.vars[2].min]
-            u = [self.vars[3].min, self.vars[4].min, self.vars[5].min]
-            checkNash(t,u, n-1)
+            
+            if  self.vars[0].min == 2 and self.vars[1].min == 2 and self.vars[2].min == 1 :
+                pass
+                
+            checkNash(t,n-1)
             return [self.vars]
         else :
             BR[i]   = []
-            BRu[i]   = []
             cnt[i]  = 1
             for j in range(i+1,len(V)) :
                 cnt[i] *= V[j].card()
@@ -144,15 +151,16 @@ class SearchInstanceTailored :
 
             for j in range(self.vars[i].min, self.vars[i].max+1) :
                 branch = copy.deepcopy(self)
- 
+
                 branch.vars[i].setle(j)
                 branch.vars[i].setge(j)
+                cx[0] += 1
 
                 s += branch.search(i+1)
 
-                # if cnt[i] <= 0 :
-                #     checkEndOfTable(branch.vars, i)
-                #     break
+                if cnt[i] <= 0 :
+                    checkEndOfTable([branch.vars[0].min, branch.vars[1].min, branch.vars[2].min] , i)
+                    break
             return  s
 
 #====================================================================
@@ -167,3 +175,4 @@ for n in Nash :
     print(n)
 print(f"Total solutions: {len(S)}")
 print(f"Total PNE: {len(Nash)}")
+print(f"Counter: {cx[0]}")

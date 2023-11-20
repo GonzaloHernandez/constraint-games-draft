@@ -31,8 +31,7 @@ V   = [ x, y, z]
 U   = [ux,uy,uz]
 G   = [gx,gy,gz]
 
-t   = [1,1,2]
-u   = [1,1,1]
+t   = [2,2,1]
 i   = 2
 
 C = []
@@ -42,7 +41,7 @@ for j in range(len(V)) :
 
 # C.append( Constraint( U[i] > u[i] ))
 
-S = solveModel( V+U, [G[i]] + C )
+S = solveModel( V+U, G + C )
 
 for s in S:
     printlist(s)
