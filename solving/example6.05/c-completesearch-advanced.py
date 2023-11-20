@@ -40,6 +40,7 @@ G   = [gx,gy,gz]
 
 Nash    = []
 BR      = [[],[],[]]
+BRu     = [[],[],[]]
 cnt     = [0,0,0]
 n       = 3
 
@@ -52,14 +53,14 @@ def findBestResponse(t,u,i) :
         if j != i :
             C.append( Constraint( V[j] == t[j] ) )
 
-    C.append( Constraint( U[i] > u[i] ))
+    C.append( Constraint( U[i] == 1 ))
  
-    S = solveModel( V + [U[i]] , [G[i]] + C )
+    S = solveModel( V + U , G + C )
 
     d = []
 
     for s in S :
-        d.append([s[0].min, s[1].min, s[2].min])
+        d.append([s[0].min, s[1].min, s[2].min, s[3].min, s[4].min, s[5].min])
 
     return d
 
@@ -69,30 +70,40 @@ def checkNash(t,u,i) :
     if i<0 :
         Nash.append(t+u)
     else :
-        # d = search_table(t,i)
-        # if d is None :
-            # d = findBestResponse(t,u,i)
-            # pendant to insert other not best responses
-            # insert_table(i,d)
-            # cnt[i-1] -= 1
-        # if t in d :
-        d = findBestResponse(t,u,i)
-        insert_table(i,d)
+        d = search_table(t,u,i)
         if d == [] :
+            d = findBestResponse(t,u,i)
+            # pendant to insert other not best responses
+            insert_table(i,d)
+            cnt[i-1] -= 1
+        if t+u in d :
             checkNash(t,u,i-1)
+
+        # d = findBestResponse(t,u,i)
+        # insert_table(i,d)
+        # if d == [] :
+        #     checkNash(t,u,i-1)
 
 #--------------------------------------------------------------
 
-def search_table(t,i) :
-    if t in  BR[i] :
-        return t
-    return None
+def search_table(t,u,i) :
+    if len(BR[i]) <= 0 : return []
+
+    br = []
+
+    for b in range(len(BR[i])) :
+        if BR[i][b][1:i]+BR[i][b][i+1:n] == t[1:i]+t[i+1:n]:
+            if BRu[i][b][i] == 1 : # > u[i] :
+                br.append( BR[i][b]+BRu[i][b] )
+    return br
 
 #--------------------------------------------------------------
 
 def insert_table(i,d) :
     for t in d :
-        BR[i].append(t)
+        if [t[0],t[1],t[2]] not in BR[i] :
+            BR[i].append([t[0],t[1],t[2]])
+            BRu[i].append([t[3],t[4],t[5]])
 
 #--------------------------------------------------------------
 
@@ -124,6 +135,7 @@ class SearchInstanceTailored :
             return [self.vars]
         else :
             BR[i]   = []
+            BRu[i]   = []
             cnt[i]  = 1
             for j in range(i+1,len(V)) :
                 cnt[i] *= V[j].card()
