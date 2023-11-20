@@ -1,6 +1,10 @@
-import os, copy
+import os,sys
+
 os.system("clear")
 
+#--------------------------------------------------------------
+
+sys.path.insert(1,".")
 from ConstraintCPSolver import *
 
 x   = IntVar( 'x',1,9)
@@ -30,11 +34,9 @@ V   = [ x, y, z]
 U   = [ux,uy,uz]
 G   = [gx,gy,gz]
 
-
 S = solveModelPNE( V, U, G)
 
 for n in S :
     print(n)
-    
-print(f"Total PNE: {len(S)}")
 
+print(f"Total PNE: {len(S)}")
