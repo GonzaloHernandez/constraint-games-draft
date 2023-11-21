@@ -343,6 +343,27 @@ class SearchInstance :
         self.func = func
         self.glob = Globals([0],[])
     
+    def isFun(self) :
+        return True if self.func[0] > 0 else False
+
+    def isFunMin(self) :
+        return True if self.func[0] == 1 else False
+    
+    def isFunMax(self) :
+        return True if self.func[0] == 2 else False
+
+    def getFunValue(self) :
+        return self.glob.optv[0]
+
+    def evaluateFun(self) :
+        return self.func[1].evaluate()[0]
+    
+    def setFunValue(self,v) :
+        self.glob.optv[0] = v
+    
+    def getFun(self) :
+        return self.func[1]
+
     #--------------------------------------------------------------
     def search(self) :
         for c in self.cons+self.glob.optc :
@@ -358,22 +379,26 @@ class SearchInstance :
                 assigned = False
         
         if assigned :
-            if (self.func[0] == 0  and self.glob.sols == [] ) :
-                self.glob.optv[0] = 0
+            if self.glob.sols == [] :
+                if self.isFun() :
+                    self.setFunValue( self.evaluateFun() )
+                else :
+                    self.setFunValue(0)
                 self.glob.sols.append(self.vars)
                 return 
             
-            if (self.func[0] == 1 and self.func[1].evaluate()[0] < self.glob.optv[0]) or (self.func[0] == 2 and self.func[1].evaluate()[0] > self.glob.optv[0]) :
-                self.glob.optv[0] = self.func[1].evaluate()[0]
+            if (self.isFunMin() and self.evaluateFun() < self.getFunValue()) or (self.isFunMax() and self.evaluateFun() > self.getFunValue()) :
+                self.setFunValue( self.evaluateFun() )
                 self.glob.sols = []
-                self.glob.optc.append(Constraint(self.func[1]<=self.glob.optv[0])) # pending to double check.
+                # if self.isFunMax() :
+                #     self.glob.optc.append(Constraint(self.getFun() >= self.getFunValue()))
+                # else :
+                #     self.glob.optc.append(Constraint(self.getFun() <= self.getFunValue()))
 
-            if (self.func[0] == 1 and self.func[1].evaluate()[0] > self.glob.optv[0]) or (self.func[0] == 2 and self.func[1].evaluate()[0] < self.glob.optv[0]) :
+            if (self.isFunMin() and self.evaluateFun() > self.getFunValue()) or (self.isFunMax() and self.evaluateFun() < self.getFunValue()) :
                 pass
             else :
                 self.glob.sols.append(self.vars)
-            print("----",end="") 
-            printlist(self.vars)
         else :
             for i,v in enumerate(self.vars) :
                 if not v.isAssigned():
@@ -466,9 +491,9 @@ G = [
     Constraint( U[1] == x*2 -y + 1 )
 ]
 
-F = minimize(U[0])
+F = minimize(U[0]*U[1])
 
-S = solveModel(V+U, G, F)
+S = solveModel(V+U, G, F )
 
 for s in S :
     printlist(s)
