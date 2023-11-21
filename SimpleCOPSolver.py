@@ -328,17 +328,24 @@ class Constraint :
 
 #====================================================================
 
+class Globals :
+    def __init__(self,optv,sols) -> None:
+        self.optv = optv
+        self.optc = []
+        self.sols = sols
+
+#====================================================================
+
 class SearchInstance :
     def __init__(self, vars, cons, func) -> None:
         self.vars = vars
         self.cons = cons
         self.func = func
-        self.optv = []
-        self.opts = []
+        self.glob = Globals([0],[])
     
     #--------------------------------------------------------------
     def search(self) :
-        for c in self.cons :
+        for c in self.cons+self.glob.optc :
             if c.prune() is False : return []
         
         for v in self.vars :
@@ -351,19 +358,22 @@ class SearchInstance :
                 assigned = False
         
         if assigned :
-            if self.optv == [] :
-                self.optv.append(self.func[1].evaluate()[0])
-                self.opts.append([self.vars])
-                self.cons.append(Constraint(self.func[1]<self.optv[0]))
-            else :
-                if self.func[0]==0 and self.func[1].evaluate()[0] < self.optv[0] :
-                    self.optv[0] = self.func[1].evaluate()[0]
-                    self.opts[0] = [self.vars]
-                elif self.func[0]==1 and self.func[1].evaluate()[0] > self.optv[0] :
-                    self.optv[0] = self.func[1].evaluate()[0]
-                    self.opts[0] = [self.vars]
+            if (self.func[0] == 0  and self.glob.sols == [] ) :
+                self.glob.optv[0] = 0
+                self.glob.sols.append(self.vars)
+                return 
+            
+            if (self.func[0] == 1 and self.func[1].evaluate()[0] < self.glob.optv[0]) or (self.func[0] == 2 and self.func[1].evaluate()[0] > self.glob.optv[0]) :
+                self.glob.optv[0] = self.func[1].evaluate()[0]
+                self.glob.sols = []
+                self.glob.optc.append(Constraint(self.func[1]<=self.glob.optv[0])) # pending to double check.
 
-            return [self.vars]
+            if (self.func[0] == 1 and self.func[1].evaluate()[0] > self.glob.optv[0]) or (self.func[0] == 2 and self.func[1].evaluate()[0] < self.glob.optv[0]) :
+                pass
+            else :
+                self.glob.sols.append(self.vars)
+            print("----",end="") 
+            printlist(self.vars)
         else :
             for i,v in enumerate(self.vars) :
                 if not v.isAssigned():
@@ -373,7 +383,9 @@ class SearchInstance :
                     left    .vars[i].setle(left .vars[i].min)
                     right   .vars[i].setge(right.vars[i].min+1)
                     
-                    return left.search() + right.search()
+                    left.search()
+                    right.search()
+                    break
         
     def clone(self) :
         branch = copy.copy(self)
@@ -382,13 +394,11 @@ class SearchInstance :
 
 #====================================================================
 
-def solveModel(vars, cons, func) :
+def solveModel(vars, cons, func=[0,None]) :
     model = copy.deepcopy([vars,cons,func])
     s = SearchInstance(model[0],model[1],model[2])
-    S = s.search()
-    print(f"opt ",end=": ")
-    printlist(s.opts[0][0])
-    return S
+    s.search()
+    return s.glob.sols
 #--------------------------------------------------------------
 
 def IntVarArray(n,prefix,min,max) :
@@ -433,14 +443,17 @@ def printlist(ls) :
     for l in ls : print(l,end=" ")
     print("]")
 
-
-def maximize(exp) :
+def minimize(exp) :
     return [1,exp]
 
-def minimize(exp) :
-    return [0,exp]
+def maximize(exp) :
+    return [2,exp]
 
 #====================================================================
+
+import os
+
+os.system("reset")
 
 x = IntVar('A',0,1)
 y = IntVar('B',0,1)
@@ -453,7 +466,7 @@ G = [
     Constraint( U[1] == x*2 -y + 1 )
 ]
 
-F = maximize(U[0]-U[1])
+F = minimize(U[0])
 
 S = solveModel(V+U, G, F)
 
