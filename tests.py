@@ -30,11 +30,16 @@ V   = [ x, y, z]
 U   = [ux,uy,uz]
 G   = [gx,gy,gz]
 
+# S = solveModelPNE( V, U, G)
 
-S = solveModelPNE( V, U, G)
-
-for n in S :
-    print(n)
+# for n in S :
+#     print(n)
     
-print(f"Total PNE: {len(S)}")
+# print(f"Total PNE: {len(S)}")
 
+for i,v in enumerate(V) :
+    if id(v)== id(z) :
+        break
+
+
+print("index of y : "+str(i))

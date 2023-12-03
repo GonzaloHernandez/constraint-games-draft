@@ -4,7 +4,7 @@ os.system("clear")
 from minizinc import Instance, Model, Solver
 
 solver      = Solver.lookup("gecode")
-nPlayers    = 5
+nPlayers    = 7
 nStrategies = 5
 mznGameFile = "./solving/example4.21/model/problem.mzn"
 mznPNEFile  = "./solving/example4.21/model/pne.mzn"
@@ -57,3 +57,5 @@ for i in range(len(resPNE)) :
 print(f"Total solutions: {len(resPNE)} [{(end-start):.2f}sg]")
 
 print()
+
+# players 7 / strategies 5 / loops 35156 / [1556.76sg]

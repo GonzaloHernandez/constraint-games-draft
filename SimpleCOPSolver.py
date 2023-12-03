@@ -475,25 +475,3 @@ def maximize(exp) :
     return [2,exp]
 
 #====================================================================
-
-import os
-
-os.system("reset")
-
-x = IntVar('A',0,1)
-y = IntVar('B',0,1)
-
-V = [x,y]
-U = IntVarArray(2,'u',0,3)
-
-G = [
-    Constraint( U[0] == x*(-1) + y*2 + 1 ),
-    Constraint( U[1] == x*2 -y + 1 )
-]
-
-F = minimize(U[0]*U[1])
-
-S = solveModel(V+U, G, F )
-
-for s in S :
-    printlist(s)
