@@ -1,4 +1,4 @@
-import sys
+import sys, time
 
 #--------------------------------------------------------------
 
@@ -9,7 +9,7 @@ import copy
 #--------------------------------------------------------------
 
 class Globals :
-    def __init__(self,V,U,G) -> None:
+    def __init__(self,V,U,G,F) -> None:
         self.Nash   = []
         self.BR     = []
         self.cnt    = []
@@ -17,6 +17,7 @@ class Globals :
         self.V      = V
         self.U      = U
         self.G      = G
+        self.F      = F
         self.count  = 0
 
         for i in range(self.n) : 
@@ -26,10 +27,10 @@ class Globals :
 #--------------------------------------------------------------
 
 class SearchInstancePNE :
-    def __init__(self, V, U, G) -> None:
+    def __init__(self, V, U, G, F) -> None:
         self.vars = V
         self.cons = G
-        self.glob = Globals(V,U,G)
+        self.glob = Globals(V,U,G,F)
     
     #--------------------------------------------------------------
     def search(self, i) :
@@ -45,7 +46,7 @@ class SearchInstancePNE :
         if i==self.glob.n :
             t = []
             for v in self.vars : t.append(v.min)
-            
+
             self.checkNash(t,self.glob.n-1)
             return [self.vars]
         else :
@@ -62,9 +63,9 @@ class SearchInstancePNE :
 
                 branch.search(i+1)
 
-                # if self.glob.cnt[i] <= 0 :
-                #     self.checkEndOfTable(i)
-                #     break
+                if self.glob.cnt[i] <= 0 :
+                    self.checkEndOfTable(i)
+                    break
     
     #--------------------------------------------------------------
     def clone(self) :
@@ -87,8 +88,9 @@ class SearchInstancePNE :
                     for j in range(len(self.glob.V)) :
                         if j != i :
                             C.append( Constraint( self.glob.V[j] == t[j] ) )
-                            
-                    S_ = solveModel(self.glob.V + self.glob.U, self.glob.G+C)
+
+                    S_ = solveModel(self.glob.V + self.glob.U, self.glob.G+C, tops=0)
+
                     for s in S_ :
                         
                         dt = []
@@ -104,27 +106,22 @@ class SearchInstancePNE :
 
     #--------------------------------------------------------------
     def findBestResponse(self,t,i) :
-
-        C1 = []
-        for j in range(len(self.glob.V)) :
-            C1.append( Constraint( self.glob.V[j] == t[j] ) )
-    
-        S1 = solveModel( self.glob.V + self.glob.U , self.glob.G + C1 )
-
-        u = S1[0][self.glob.n].min
-
-        C2 = []
+        C = []
         for j in range(len(self.glob.V)) :
             if j != i :
-                C2.append( Constraint( self.glob.V[j] == t[j] ) )
-
-        F2 = maximize(  self.glob.U[i] )
+                C.append( Constraint( self.glob.V[j] == t[j] ) )
     
-        S2 = solveModel( self.glob.V + self.glob.U , self.glob.G + C2 , F2 )
+        if self.glob.F == [] :
+            C.append( Constraint( self.glob.U[i] == 1))
+            F = [0,None]
+        else :
+            F = self.glob.F[i]
+
+        S = solveModel( self.glob.V + self.glob.U , self.glob.G + C , F, tops=0 )
 
         d = []
 
-        for s in S2 :
+        for s in S :
             dt = []
             for j in range(self.glob.n) :
                 dt.append(s[j].min)
@@ -158,9 +155,9 @@ class SearchInstancePNE :
 
 #====================================================================
 
-def solveModelPNE(V,U,G) :
-    model = copy.deepcopy([V,U,G])
-    s = SearchInstancePNE(model[0],model[1],model[2])
+def solveModelPNE(V,U,G,F=[]) :
+    model = copy.deepcopy([V,U,G,F])
+    s = SearchInstancePNE(model[0],model[1],model[2],model[3])
     s.search(0)
     print("total loops: "+str(s.glob.count))
     return s.glob.Nash

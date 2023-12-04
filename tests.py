@@ -1,14 +1,14 @@
 import os, copy
 os.system("clear")
 
-from ConstraintCPSolver import *
+from SimpleCOPSolver import *
 
-x   = IntVar( 'x',1,9)
-y   = IntVar( 'y',1,9)
-z   = IntVar( 'z',1,3)
-ux  = IntVar('ux',0,1)
-uy  = IntVar('uy',0,1)
-uz  = IntVar('uz',0,1)
+x   = IntVar('x0',1,9)
+y   = IntVar('y1',1,9)
+z   = IntVar('z2',1,3)
+ux  = IntVar('u3',0,1)
+uy  = IntVar('u4',0,1)
+uz  = IntVar('u5',0,1)
 
 gx = Constraint(
     ux == (x == (y*z))
@@ -26,20 +26,18 @@ gz = Constraint(
     )
 )
 
-V   = [ x, y, z]
-U   = [ux,uy,uz]
-G   = [gx,gy,gz]
+V = [ x, y, z]
+U = [ux,uy,uz]
+G = [gx,gy,gz]
 
-# S = solveModelPNE( V, U, G)
+S = solveModel( V+U, G, minimize(x+y), tops=10)
 
-# for n in S :
-#     print(n)
+for s in S :
+    printvars(s)
     
-# print(f"Total PNE: {len(S)}")
+print(f"Total Solutions: {len(S)}")
 
-for i,v in enumerate(V) :
-    if id(v)== id(z) :
-        break
+# _start  = time.time()   # PROFILER
+# _end    = time.time()   # PROFILER
+# print(f"PROFILER: {(_end-_start):.2f}sg")
 
-
-print("index of y : "+str(i))

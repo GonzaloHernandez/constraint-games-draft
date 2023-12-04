@@ -10,11 +10,9 @@ from ConstraintCPSolver import *
 x   = IntVar( 'x',1,9)
 y   = IntVar( 'y',1,9)
 z   = IntVar( 'z',1,3)
-w   = IntVar( 'w',1,3)
 ux  = IntVar('ux',0,1)
 uy  = IntVar('uy',0,1)
 uz  = IntVar('uz',0,1)
-uw  = IntVar('uw',0,1)
 
 gx = Constraint(
     ux == (x == (y*z))
@@ -32,13 +30,9 @@ gz = Constraint(
     )
 )
 
-gw = Constraint(
-    uw == (x < w)
-)
-
-V   = [ x, y, z, w]
-U   = [ux,uy,uz,uw]
-G   = [gx,gy,gz,gw]
+V   = [ x, y, z]
+U   = [ux,uy,uz]
+G   = [gx,gy,gz]
 
 S = solveModelPNE( V, U, G)
 

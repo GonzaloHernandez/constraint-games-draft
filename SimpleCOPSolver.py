@@ -62,35 +62,38 @@ class Operable :
 #====================================================================
 
 class IntVar (Operable) :
+    
+    VIEW_NAME,VIEW_VALUE,VIEW_MIX = 1,2,3
+
     def __init__(self, name, min, max) -> None:
         self.name   = name
         self.min    = min
         self.max    = max
-
-    # #--------------------------------------------------------------
-    # def __str__(self) -> str:
-    #     if self.isFailed() :
-    #         return f"{self.name}()"
-    #     elif self.isAssigned() :
-    #         return f"{self.name}{{{str(self.min)}}}"
-    #     else :
-    #         return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"
-
-    # #--------------------------------------------------------------
-    # def __str__(self) -> str:
-    #     if self.name == "_" :
-    #         return str(self.min)
-    #     else :
-    #         return str(self.name)
+        self.view   = self.VIEW_MIX
 
     #--------------------------------------------------------------
     def __str__(self) -> str:
-        if self.isFailed() :
-            return "_"
-        elif self.isAssigned() :
-            return f"{self.min}"
-        else :
-            return f"{{{str(self.min)}..{str(self.max)}}}"
+        if self.view == self.VIEW_VALUE :
+            if self.isFailed() :
+                return "_"
+            elif self.isAssigned() :
+                return f"{self.min}"
+            else :
+                return f"{{{str(self.min)}..{str(self.max)}}}"
+            
+        elif self.view == self.VIEW_NAME :
+            if self.name == "_" :
+                return str(self.min)
+            else :
+                return str(self.name)
+
+        elif self.view == self.VIEW_MIX :
+            if self.isFailed() :
+                return f"{self.name}()"
+            elif self.isAssigned() :
+                return f"{self.name}{{{str(self.min)}}}"
+            else :
+                return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"        
 
     #--------------------------------------------------------------
     def setge(self, val) :
@@ -114,6 +117,12 @@ class IntVar (Operable) :
     def project(self, newmin, newmax) :
         self.setge(newmin)
         self.setle(newmax)
+
+    def match(self, localvars, globalvars) :
+        for i,v in enumerate(globalvars) :
+            if id(v)==id(self) :
+                return localvars[i]
+        return self
 
 #====================================================================
 
@@ -313,6 +322,13 @@ class Expression (Operable) :
                 if self.exp2.project(rmin, rmax) is False : return False
         return True
 
+    #--------------------------------------------------------------
+    def match(self, localvars, globalvars) :
+        exp1 = self.exp1.match(localvars, globalvars)
+        exp2 = self.exp2.match(localvars, globalvars)
+
+        return Expression(exp1, self.oper, exp2)
+
 #====================================================================
 
 class Constraint :
@@ -325,82 +341,98 @@ class Constraint :
     def prune(self) :
         self.exp.evaluate()
         return self.exp.project(1,1)
+    
+    def match(self, localvars, globalvars) :
+        return Constraint(self.exp.match(localvars, globalvars))
 
 #====================================================================
 
 class Globals :
-    def __init__(self,optv,sols) -> None:
+    def __init__(self, optv, vars, func, sols, tops) -> None:
         self.optv = optv
-        self.optc = []
+        self.vars = vars
+        self.func = func
+        self.optc = None
         self.sols = sols
+        self.tops = tops
+        self.done = False
 
 #====================================================================
 
 class SearchInstance :
-    def __init__(self, vars, cons, func) -> None:
+    def __init__(self, vars, cons, func, tops) -> None:
         self.vars = vars
         self.cons = cons
-        self.func = func
-        self.glob = Globals([0],[])
+        self.glob = Globals([0], vars, func, [], tops)
     
     def isFun(self) :
-        return True if self.func[0] > 0 else False
+        return True if self.glob.func[0] > 0 else False
 
     def isFunMin(self) :
-        return True if self.func[0] == 1 else False
+        return True if self.glob.func[0] == 1 else False
     
     def isFunMax(self) :
-        return True if self.func[0] == 2 else False
+        return True if self.glob.func[0] == 2 else False
 
     def getFunValue(self) :
         return self.glob.optv[0]
 
     def evaluateFun(self) :
-        return self.func[1].evaluate()[0]
+        localfun = self.glob.func[1].match(self.vars, self.glob.vars)
+        return localfun.evaluate()[0]
     
     def setFunValue(self,v) :
         self.glob.optv[0] = v
     
     def getFun(self) :
-        return self.func[1]
+        return self.glob.func[1]
 
     #--------------------------------------------------------------
     def search(self) :
-        for c in self.cons+self.glob.optc :
+        for c in self.cons :
             if c.prune() is False : return []
-        
+
+        if not self.glob.optc is None :
+            c = self.glob.optc.match(self.vars, self.glob.vars)
+            c.prune()
+
+        assigned = True
         for v in self.vars :
             if v.isFailed() :
                 return []
-        
-        assigned = True
-        for v in self.vars :
             if not v.isAssigned() :
                 assigned = False
-        
-        if assigned :
-            if self.glob.sols == [] :
-                if self.isFun() :
-                    self.setFunValue( self.evaluateFun() )
-                else :
-                    self.setFunValue(0)
-                self.glob.sols.append(self.vars)
-                return 
-            
-            if (self.isFunMin() and self.evaluateFun() < self.getFunValue()) or (self.isFunMax() and self.evaluateFun() > self.getFunValue()) :
-                self.setFunValue( self.evaluateFun() )
-                self.glob.sols = []
-                # if self.isFunMax() :
-                #     self.glob.optc.append(Constraint(self.getFun() >= self.getFunValue()))
-                # else :
-                #     self.glob.optc.append(Constraint(self.getFun() <= self.getFunValue()))
+                break
 
-            if (self.isFunMin() and self.evaluateFun() > self.getFunValue()) or (self.isFunMax() and self.evaluateFun() < self.getFunValue()) :
-                pass
-            else :
+        if assigned :
+            if not self.isFun() :
                 self.glob.sols.append(self.vars)
+                if len(self.glob.sols)==self.glob.tops : self.glob.done = True
+            else :
+                if self.glob.sols == [] :
+                    self.setFunValue( self.evaluateFun() )
+                    if self.isFunMax() :
+                        self.glob.optc = Constraint(self.glob.func[1] >= IntVar('@',self.evaluateFun(), 2147483647))
+                    else :
+                        self.glob.optc = Constraint(self.glob.func[1] <= IntVar('@',-2147483648,self.evaluateFun()))
+                    self.glob.sols.append(self.vars)
+                else :
+                    if self.isFunMin() and self.evaluateFun() < self.getFunValue() :
+                        self.glob.sols = []
+                        self.setFunValue( self.evaluateFun() )
+                        self.glob.optc.exp.exp2.setle(self.getFunValue())
+                        self.glob.sols.append(self.vars)
+                    elif self.isFunMax() and self.evaluateFun() > self.getFunValue() :
+                        self.glob.sols = []
+                        self.setFunValue( self.evaluateFun() )
+                        self.glob.optc.exp.exp2.setge(self.getFunValue())
+                        self.glob.sols.append(self.vars)
+                    elif self.evaluateFun() == self.getFunValue() :
+                        self.glob.sols.append(self.vars)
+
         else :
             for i,v in enumerate(self.vars) :
+                if self.glob.done : break
                 if not v.isAssigned():
                     left    = self.clone()
                     right   = self.clone()
@@ -414,14 +446,14 @@ class SearchInstance :
         
     def clone(self) :
         branch = copy.copy(self)
-        branch.vars,branch.cons,branch.func = copy.deepcopy([self.vars,self.cons,self.func])
+        branch.vars, branch.cons = copy.deepcopy([self.vars, self.cons])
         return branch
 
 #====================================================================
 
-def solveModel(vars, cons, func=[0,None]) :
+def solveModel(vars, cons, func=[0,None], tops=1) :
     model = copy.deepcopy([vars,cons,func])
-    s = SearchInstance(model[0],model[1],model[2])
+    s = SearchInstance(model[0],model[1],model[2],tops)
     s.search()
     return s.glob.sols
 #--------------------------------------------------------------
@@ -444,13 +476,13 @@ def count(vars,cond) :
 
 def alldifferent(vars) :
     exp = vars[0] if len(vars)==1 else None
-    for i in range(len(vars)):
-        for j in range(len(vars)):
-            if (i != j) : 
-                if exp is None :
-                    exp = (vars[i] != vars[j])
-                else :
-                    exp = exp & (vars[i] != vars[j])
+    for i in range(len(vars)-1):
+        for j in range(i+1,len(vars)):
+            if exp is None :
+                exp = (vars[i] != vars[j])
+            else :
+                exp = exp & (vars[i] != vars[j])
+
     return exp
 
 #--------------------------------------------------------------
@@ -463,9 +495,11 @@ def sum(vars) :
 
 #--------------------------------------------------------------
 
-def printlist(ls) :
+def printvars(ls, view=IntVar.VIEW_MIX) :
     print("[ ",end="")
-    for l in ls : print(l,end=" ")
+    for l in ls : 
+        l.view = view
+        print(l,end=" ")
     print("]")
 
 def minimize(exp) :
