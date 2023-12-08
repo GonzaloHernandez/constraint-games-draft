@@ -1,9 +1,10 @@
 #====================================================================
 # 
-# Simple Constraint Programming Solver V1.0
+# Simple Constraint Programming Solver V0.9
 # Gonzalo Hernandez
 # 
-# This file is inherited from solver.py
+# This file is inherited from solver.py and It wont have
+# more work in the future.
 #====================================================================
 
 import copy, math

@@ -1,6 +1,6 @@
 #====================================================================
 # 
-# Simple Constraint Programming Solver V1.0
+# Simple Constraint Programming Solver V1.1
 # Gonzalo Hernandez
 # 
 # This file is inherited from solver.py
@@ -12,68 +12,78 @@ import copy, math
 
 class Operable :
     def __add__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"+",exp)
 
     def __sub__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"-",exp)
 
     def __mul__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"*",exp)
 
     def __mul__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"*",exp)
 
     def __eq__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"==",exp)
 
     def __ne__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"!=",exp)
 
     def __lt__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"<",exp)
 
     def __le__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"<=",exp)
 
     def __gt__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,">",exp)
 
     def __ge__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,">=",exp)
 
     def __and__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"&",exp)
 
     def __or__(self, exp) :
-        if isinstance(exp, int) : exp = IntVar("_",exp,exp)
+        if isinstance(exp, int) : exp = IntVar(exp,exp)
         return Expression(self,"|",exp)
 
 #====================================================================
 
 class IntVar (Operable) :
     
-    VIEW_NAME,VIEW_VALUE,VIEW_MIX = 1,2,3
+    INFINITE                            = 2147483647
+    PRINT_NAME, PRINT_VALUE, PRINT_MIX  = 1,2,3
 
-    def __init__(self, name, min, max) -> None:
-        self.name   = name
+    #--------------------------------------------------------------
+    def __init__(self, min=-INFINITE, max=INFINITE, name='_') -> None:
         self.min    = min
         self.max    = max
-        self.view   = self.VIEW_MIX
+        self.name   = name
 
     #--------------------------------------------------------------
     def __str__(self) -> str:
-        if self.view == self.VIEW_VALUE :
+        if self.isFailed() :
+            return f"{self.name}()"
+        elif self.isAssigned() :
+            return f"{self.name}{{{str(self.min)}}}"
+        else :
+            return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"        
+
+    #--------------------------------------------------------------
+    def toStr(self, view=PRINT_MIX) :
+        if view == self.PRINT_VALUE :
             if self.isFailed() :
                 return "_"
             elif self.isAssigned() :
@@ -81,19 +91,19 @@ class IntVar (Operable) :
             else :
                 return f"{{{str(self.min)}..{str(self.max)}}}"
             
-        elif self.view == self.VIEW_NAME :
+        elif view == self.PRINT_NAME :
             if self.name == "_" :
                 return str(self.min)
             else :
                 return str(self.name)
 
-        elif self.view == self.VIEW_MIX :
+        elif view == self.PRINT_MIX :
             if self.isFailed() :
                 return f"{self.name}()"
             elif self.isAssigned() :
                 return f"{self.name}{{{str(self.min)}}}"
             else :
-                return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"        
+                return f"{self.name}{{{str(self.min)}..{str(self.max)}}}"           
 
     #--------------------------------------------------------------
     def setge(self, val) :
@@ -224,8 +234,6 @@ class Expression (Operable) :
 
     #--------------------------------------------------------------
     def project(self, nmin, nmax) :
-        if nmin > nmax : return False
-        
         [lmin,lmax] = [self.exp1.min, self.exp1.max]
         [rmin,rmax] = [self.exp2.min, self.exp2.max]
 
@@ -235,14 +243,24 @@ class Expression (Operable) :
                     if self.exp1.project( max(lmin,rmin), min(lmax,rmax) ) is False : return False
                     if self.exp2.project( max(lmin,rmin), min(lmax,rmax) ) is False : return False
                 if nmin == nmax == 0 :
-                    if lmin == lmax == rmin == rmax :
+                    if rmin == rmax == lmin :
                         if self.exp1.project( lmin+1 , lmax ) is False : return False
+                    if rmin == rmax == lmax :
+                        if self.exp1.project( lmin , lmax-1 ) is False : return False
+                    if lmin == lmax == rmin :
                         if self.exp2.project( rmin+1 , rmax ) is False : return False
+                    if lmin == lmax == rmax :
+                        if self.exp2.project( rmin , rmax-1 ) is False : return False
             case "!=" : 
                 if nmin == nmax == 1 :
-                    if lmin == lmax == rmin == rmax :
+                    if rmin == rmax == lmin :
                         if self.exp1.project( lmin+1 , lmax ) is False : return False
+                    if rmin == rmax == lmax :
+                        if self.exp1.project( lmin , lmax-1 ) is False : return False
+                    if lmin == lmax == rmin :
                         if self.exp2.project( rmin+1 , rmax ) is False : return False
+                    if lmin == lmax == rmax :
+                        if self.exp2.project( rmin , rmax-1 ) is False : return False
                 if nmin == nmax == 0 :
                     if self.exp1.project( max(lmin,rmin), min(lmax,rmax) ) is False : return False
                     if self.exp2.project( max(lmin,rmin), min(lmax,rmax) ) is False : return False
@@ -276,6 +294,8 @@ class Expression (Operable) :
                     if self.exp2.project( lmin+1, rmax   ) is False : return False
 
             case "&" :
+                if nmin > nmax : return False  # line pending to double check
+
                 if nmin == nmax == 1 :
                     if self.exp1.project( 1, lmax ) is False : return False
                     if self.exp2.project( 1, rmax ) is False : return False
@@ -349,13 +369,13 @@ class Constraint :
 
 class Globals :
     def __init__(self, optv, vars, func, sols, tops) -> None:
-        self.optv = optv
-        self.vars = vars
-        self.func = func
-        self.optc = None
-        self.sols = sols
-        self.tops = tops
-        self.done = False
+        self.optv = optv    # Current optimization value
+        self.vars = vars    # Original variables
+        self.func = func    # Optimization function [type,expression]
+        self.optc = None    # Optimization (new) constraint
+        self.sols = sols    # Solutions found
+        self.tops = tops    # Amount of solutions required
+        self.done = False   # Flag to stop searching
 
 #====================================================================
 
@@ -365,13 +385,13 @@ class SearchInstance :
         self.cons = cons
         self.glob = Globals([0], vars, func, [], tops)
     
-    def isFun(self) :
+    def isOptimizing(self) :
         return True if self.glob.func[0] > 0 else False
 
-    def isFunMin(self) :
+    def isMinimizing(self) :
         return True if self.glob.func[0] == 1 else False
     
-    def isFunMax(self) :
+    def isMaximizing(self) :
         return True if self.glob.func[0] == 2 else False
 
     def getFunValue(self) :
@@ -396,39 +416,35 @@ class SearchInstance :
             c = self.glob.optc.match(self.vars, self.glob.vars)
             c.prune()
 
-        assigned = True
+        allAssigned = True
         for v in self.vars :
             if v.isFailed() :
                 return []
             if not v.isAssigned() :
-                assigned = False
+                allAssigned = False
                 break
 
-        if assigned :
-            if not self.isFun() :
+        if allAssigned :
+            if self.isOptimizing() : 
+                val = self.evaluateFun()
+                if self.glob.sols == [] :
+                    if self.isMaximizing() :
+                        self.glob.optc = Constraint(
+                            self.glob.func[1] > IntVar(val, IntVar.INFINITE) )
+                    else :
+                        self.glob.optc = Constraint(
+                            self.glob.func[1] < IntVar(-IntVar.INFINITE, val) )
+                else :
+                    if self.isMaximizing() :
+                        self.glob.optc.exp.exp2.setge( val )
+                    else :
+                        self.glob.optc.exp.exp2.setle( val )
+
+                self.glob.sols = [ self.vars ]
+                self.setFunValue( val )
+            else : # Is satisfying
                 self.glob.sols.append(self.vars)
                 if len(self.glob.sols)==self.glob.tops : self.glob.done = True
-            else :
-                if self.glob.sols == [] :
-                    self.setFunValue( self.evaluateFun() )
-                    if self.isFunMax() :
-                        self.glob.optc = Constraint(self.glob.func[1] >= IntVar('@',self.evaluateFun(), 2147483647))
-                    else :
-                        self.glob.optc = Constraint(self.glob.func[1] <= IntVar('@',-2147483648,self.evaluateFun()))
-                    self.glob.sols.append(self.vars)
-                else :
-                    if self.isFunMin() and self.evaluateFun() < self.getFunValue() :
-                        self.glob.sols = []
-                        self.setFunValue( self.evaluateFun() )
-                        self.glob.optc.exp.exp2.setle(self.getFunValue())
-                        self.glob.sols.append(self.vars)
-                    elif self.isFunMax() and self.evaluateFun() > self.getFunValue() :
-                        self.glob.sols = []
-                        self.setFunValue( self.evaluateFun() )
-                        self.glob.optc.exp.exp2.setge(self.getFunValue())
-                        self.glob.sols.append(self.vars)
-                    elif self.evaluateFun() == self.getFunValue() :
-                        self.glob.sols.append(self.vars)
 
         else :
             for i,v in enumerate(self.vars) :
@@ -443,7 +459,8 @@ class SearchInstance :
                     left.search()
                     right.search()
                     break
-        
+
+    #--------------------------------------------------------------
     def clone(self) :
         branch = copy.copy(self)
         branch.vars, branch.cons = copy.deepcopy([self.vars, self.cons])
@@ -456,13 +473,23 @@ def solveModel(vars, cons, func=[0,None], tops=1) :
     s = SearchInstance(model[0],model[1],model[2],tops)
     s.search()
     return s.glob.sols
+
 #--------------------------------------------------------------
 
-def IntVarArray(n,prefix,min,max) :
+def IntVarArray(n,min,max,prefix='_') :
     vs = []
     for i in range(n) :
-        vs.append(IntVar(prefix+str(i),min,max))
+        name = prefix+str(i) if prefix != '_' else '_'
+        vs.append(IntVar(min,max,name))
     return vs
+
+#--------------------------------------------------------------
+
+def printvars(vars, printview=IntVar.PRINT_MIX) :
+    print("[ ",end="")
+    for v in vars : 
+        print(v.toStr(printview), end=" ")
+    print("]")
 
 #--------------------------------------------------------------
 
@@ -495,15 +522,10 @@ def sum(vars) :
 
 #--------------------------------------------------------------
 
-def printvars(ls, view=IntVar.VIEW_MIX) :
-    print("[ ",end="")
-    for l in ls : 
-        l.view = view
-        print(l,end=" ")
-    print("]")
-
 def minimize(exp) :
     return [1,exp]
+
+#--------------------------------------------------------------
 
 def maximize(exp) :
     return [2,exp]

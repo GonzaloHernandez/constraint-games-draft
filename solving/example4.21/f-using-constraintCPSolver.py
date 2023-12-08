@@ -6,8 +6,8 @@ from ConstraintCPSolver import *
 
 np, ns = 6, 5   # number of players, number of strategies
 
-V = IntVarArray(np,'v',0,ns-1)
-U = IntVarArray(np,'u',1,np)
+V = IntVarArray(np,0,ns-1,'v')
+U = IntVarArray(np,1,np,'u')
 
 G = []
 F = []
@@ -28,8 +28,6 @@ for n in S :
     print(n)
 print(f"Total PNE: {len(S)} [{(end-start):.2f}sg]")
 
-# players 7 / strategies 5 / loops 35156 / [170.17sg] mac laptop
-# players 7 / strategies 5 / loops 97656 / [193.65sg] mac laptop
-
-# players 7 / strategies 5 / loops 35156 / [318.83sg] mac desktop
-# players 7 / strategies 5 / loops 97656 / [384.05sg] mac desktop
+# mac desktop
+# players 7 / strategies 5 / loops 35156 / [224.62sg]
+# players 7 / strategies 5 / loops 97656 / [384.05sg] 

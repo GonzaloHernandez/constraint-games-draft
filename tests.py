@@ -30,12 +30,16 @@ V = [ x, y, z]
 U = [ux,uy,uz]
 G = [gx,gy,gz]
 
-S = solveModel( V+U, G, minimize(x+y), tops=10)
+C = [
+    Constraint(x==1)
+]
+
+S = solveModel( V+U, G, minimize(x-y+z))
 
 for s in S :
     printvars(s)
     
-print(f"Total Solutions: {len(S)}")
+print(f"Total Solutions: {len(S)}") 
 
 # _start  = time.time()   # PROFILER
 # _end    = time.time()   # PROFILER

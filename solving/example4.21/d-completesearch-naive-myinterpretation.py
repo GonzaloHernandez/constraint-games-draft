@@ -91,4 +91,8 @@ async def devC_G(s,u,i) :
 
 #--------------------------------------------------------------------
 
+# start   = time.time()
 asyncio.run(CG_enum())
+# end   = time.time()
+
+# print(f"Total solutions: [{(end-start):.2f}sg]")

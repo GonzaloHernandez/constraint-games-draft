@@ -1,4 +1,4 @@
-import sys, time
+import sys
 
 #--------------------------------------------------------------
 
@@ -18,7 +18,7 @@ class Globals :
         self.U      = U
         self.G      = G
         self.F      = F
-        self.count  = 0
+        self.count  = 0     # for debugging purposes, counting loops
 
         for i in range(self.n) : 
             self.BR.append([])
@@ -84,14 +84,14 @@ class SearchInstancePNE :
                 d = self.findBestResponse(t,i)
                 
                 if d == [] :
+
                     C = []
                     for j in range(len(self.glob.V)) :
                         if j != i :
                             C.append( Constraint( self.glob.V[j] == t[j] ) )
+                    S = solveModel(self.glob.V + self.glob.U, self.glob.G+C, tops=0)
 
-                    S_ = solveModel(self.glob.V + self.glob.U, self.glob.G+C, tops=0)
-
-                    for s in S_ :
+                    for s in S :
                         
                         dt = []
                         for j in range(self.glob.n) :
@@ -107,18 +107,19 @@ class SearchInstancePNE :
     #--------------------------------------------------------------
     def findBestResponse(self,t,i) :
         C = []
+        S = []
         for j in range(len(self.glob.V)) :
             if j != i :
                 C.append( Constraint( self.glob.V[j] == t[j] ) )
     
         if self.glob.F == [] :
-            C.append( Constraint( self.glob.U[i] == 1))
-            F = [0,None]
+            C.append( Constraint( self.glob.U[i] == 1) )
+            S = solveModel( self.glob.V + self.glob.U , self.glob.G + C , tops=0 )
         else :
             F = self.glob.F[i]
-
-        S = solveModel( self.glob.V + self.glob.U , self.glob.G + C , F, tops=0 )
-
+            S = solveModel( self.glob.V + self.glob.U , self.glob.G + C , F )
+            # Pendig to search all optimima solutions
+ 
         d = []
 
         for s in S :
@@ -136,6 +137,7 @@ class SearchInstancePNE :
             self.checkNash(t,self.glob.n-1)
 
     #--------------------------------------------------------------
+
     def search_table(self,t,i) :
         if len(self.glob.BR[i]) <= 0 : return []
 
