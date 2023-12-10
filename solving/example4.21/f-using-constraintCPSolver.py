@@ -4,7 +4,7 @@ os.system("clear")
 sys.path.insert(1,".")
 from ConstraintCPSolver import *
 
-np, ns = 6, 5   # number of players, number of strategies
+np, ns = 7, 5   # number of players, number of strategies
 
 V = IntVarArray(np,0,ns-1,'v')
 U = IntVarArray(np,1,np,'u')
@@ -29,5 +29,5 @@ for n in S :
 print(f"Total PNE: {len(S)} [{(end-start):.2f}sg]")
 
 # mac desktop
-# players 7 / strategies 5 / loops 35156 / [224.62sg]
+# players 7 / strategies 5 / loops 35156 / [224.62sg] [192.87sg]
 # players 7 / strategies 5 / loops 97656 / [384.05sg] 
