@@ -13,12 +13,11 @@ G = []
 F = []
 for i in range(len(V)) :
     G.append(
-        Constraint(
+        Equation(
             U[i] == count(V,V[i])
         )
     )
     F.append( maximize( U[i] ) )
-
 
 start   = time.time()
 S = solveModelPNE( V, U, G, F)

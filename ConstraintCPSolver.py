@@ -3,7 +3,7 @@ import sys
 #--------------------------------------------------------------
 
 sys.path.insert(1,".")
-from SimpleCOPSolver import *
+from PythonCPSolver import *
 import copy
 
 #--------------------------------------------------------------
@@ -31,13 +31,29 @@ class SearchInstancePNE :
         self.vars = V
         self.cons = G
         self.glob = Globals(V,U,G,F)
-    
+
     #--------------------------------------------------------------
-    def search(self, i) :
-        self.glob.count += 1
+    def propagate(self) :
+        t1 = 0
+        for v in self.vars : t1 += v.card()
+
         for c in self.cons :
             if c.prune() is False : 
                 return []
+
+        t2 = 0
+        for v in self.vars : t2 += v.max - v.min + 1
+
+        if t2 < t1 :
+            return self.propagate()
+        else :
+            return True
+
+    #--------------------------------------------------------------
+    def search(self, i) :
+        self.glob.count += 1
+
+        if not self.propagate() : return []
         
         for v in self.vars :
             if v.isFailed() :
@@ -69,9 +85,9 @@ class SearchInstancePNE :
     
     #--------------------------------------------------------------
     def clone(self) :
-        self = copy.copy(self)
-        self.vars,self.cons = copy.deepcopy([self.vars,self.cons])
-        return self
+        branch = copy.copy(self)
+        branch.vars, branch.cons = copy.deepcopy([self.vars, self.cons])
+        return branch
 
     #--------------------------------------------------------------
     def checkNash(self,t,i) :
@@ -88,7 +104,7 @@ class SearchInstancePNE :
                     C = []
                     for j in range(len(self.glob.V)) :
                         if j != i :
-                            C.append( Constraint( self.glob.V[j] == t[j] ) )
+                            C.append( Equation( self.glob.V[j] == t[j] ) )
                     S = solveModel(self.glob.V + self.glob.U, self.glob.G+C, tops=0)
 
                     for s in S :
@@ -110,10 +126,10 @@ class SearchInstancePNE :
         S = []
         for j in range(len(self.glob.V)) :
             if j != i :
-                C.append( Constraint( self.glob.V[j] == t[j] ) )
+                C.append( Equation( self.glob.V[j] == t[j] ) )
     
         if self.glob.F == [] :
-            C.append( Constraint( self.glob.U[i] == 1) )
+            C.append( Equation( self.glob.U[i] == 1) )
             S = solveModel( self.glob.V + self.glob.U , self.glob.G + C , tops=0 )
         else :
             F = self.glob.F[i]

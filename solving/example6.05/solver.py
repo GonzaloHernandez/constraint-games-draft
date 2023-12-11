@@ -1,8 +1,9 @@
 # Draft of Simple Constraint Programming Solver
-# Future work of this project will be in SimpleCPSolver.py file
+# Future work of this project will be as PythonCPSolver
+# https://github.com/GonzaloHernandez/python-cpsolver
 
 import os, copy, math
-os.system("clear")4
+os.system("clear")
 
 #====================================================================
 
