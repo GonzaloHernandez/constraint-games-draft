@@ -41,7 +41,7 @@ insPNE          = Instance(solver, pne)
 insPNE["n"]     = nPlayers
 insPNE["s"]     = nStrategies
 insPNE["l"]     = len(resGame)
-insPNE["Vs"]    = Vaux
+insPNE["Ss"]    = Vaux
 insPNE["Us"]    = Uaux
 
 start   = time.time()

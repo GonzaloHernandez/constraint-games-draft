@@ -13,7 +13,7 @@ array [P] of var AmountS	: U;
 int : l;
 set of int : R          = 0..l-1;
 
-array [R,P] of S 		: Vs;
+array [R,P] of S 		: Ss;
 array [R,P] of AmountS	: Us;
 
 var bool                : E;
@@ -21,7 +21,7 @@ var bool                : E;
 constraint
     exists(r in R)(
         forall(i in P)(
-            Vs[r,i] = V[i] /\ Us[r,i] = U[i]
+            Ss[r,i] = V[i] /\ Us[r,i] = U[i]
         )
     );
 
@@ -30,7 +30,7 @@ constraint
 %     table(
 %         V ++ U,
 %         [(r, i): X[i] | 
-%             r in R, X = Vs[r,..] ++ Us[r, ..], 
+%             r in R, X = Ss[r,..] ++ Us[r, ..], 
 %             i in index_set(V++U)]
 %     );
 
@@ -45,7 +45,7 @@ constraint
             Us[r,p] > U[p]
             /\
             forall(i in P where i != p)(
-                Vs[r,i] = V[i]
+                Ss[r,i] = V[i]
             )
         )
     );
@@ -56,7 +56,7 @@ constraint
 %             Us[r,p] <= U[p]
 %             \/
 %             not forall(i in P where i != p)(
-%                 Vs[r,i] = V[i]
+%                 Ss[r,i] = V[i]
 %             )
 %         )
 %     );
