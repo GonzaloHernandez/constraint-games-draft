@@ -25,22 +25,8 @@ constraint
         )
     );
 
-% include "table.mzn";
-% constraint 
-%     table(
-%         V ++ U,
-%         [(r, i): X[i] | 
-%             r in R, X = Ss[r,..] ++ Us[r, ..], 
-%             i in index_set(V++U)]
-%     );
-
-%----------------------------------------------
-
 constraint
-    E = true;
-
-constraint
-    E <-> not exists(p in P)(
+    not exists(p in P)(
         exists(r in R)(
             Us[r,p] > U[p]
             /\
