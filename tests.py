@@ -45,6 +45,6 @@ os.system("clear")
 # _end    = time.time()   # PROFILER
 # print(f"PROFILER: {(_end-_start):.2f}sg")
 
-A = set()
-A = A.union({2,3,5})
-print(A.__len__())
+B = [1,2,3]
+A = range(B.__len__())
+print(A)

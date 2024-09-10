@@ -4,30 +4,14 @@ os.system("clear")
 # ============================================================
 
 class Game :
-    #-----------------------------------------------------
-
-    def __init__(self) :
-                        #0  1  2  3  4  5  6  7
-        self.graph =   [[0, 1, 0, 0, 1, 0, 0, 0], # 0
-                        [0, 0, 1, 0, 0, 1, 1, 0], # 1
-                        [0, 0, 0, 0, 0, 0, 0, 1], # 2
-                        [1, 0, 0, 0, 1, 0, 0, 0], # 3
-                        [0, 0, 0, 0, 0, 1, 0, 1], # 4
-                        [0, 1, 0, 0, 0, 0, 1, 0], # 5
-                        [0, 0, 1, 1, 0, 0, 0, 0], # 6
-                        [1, 0, 0, 0, 0, 1, 0, 0]] # 7
-        
-        self.colors=    [4, 2, 7, 9, 3, 6, 1, 8]
-
-        self.owner =    [0, 1, 1, 0, 0, 1, 0, 1]
 
     #-----------------------------------------------------
 
-    def __init__(self, graph, colors, owner) :
-                       
+    def __init__(self, graph, colors, owner, ids=None) :
         self.graph  = graph
         self.colors = colors
         self.owner  = owner
+        self.ids    = list(range(self.graph.__len__())) if ids==None else ids
 
     #-----------------------------------------------------
 
@@ -36,12 +20,15 @@ class Game :
             print(str(row))
 
     def remove(self, vertices) :
-        delta = 0
         for v in vertices :
-            self.graph.__delitem__(v - delta)
+            for c in range(self.graph.__len__()) :
+                if self.ids[c]==v : break
+            self.graph.__delitem__(c)
             for row in self.graph :
-                row.__delitem__(v - delta)
-            delta += 1
+                row.__delitem__(c)
+            self.colors.__delitem__(c)
+            self.owner.__delitem__(c)
+            self.ids.__delitem__(c)
 
     #-----------------------------------------------------
 
@@ -53,28 +40,32 @@ class Game :
                 newRow.append(item)
             newGraph.append(newRow)
         
-        newPriorities = []
-        for item in self.colors :
-            newPriorities.append(item)
-        
+        newColors = []
         newOwner = []
-        for item in self.owner :
-            newOwner.append(item)
-
-        return Game(newGraph, newPriorities, newOwner)
+        newIds = []
+        for i in range(0,self.graph.__len__()) :
+            newColors.append(self.colors[i])
+            newOwner.append(self.owner[i])
+            newIds.append(self.ids[i])
+        
+        return Game(newGraph, newColors, newOwner, newIds)
 
     #-----------------------------------------------------
 
     def attractor(self, o, vertices) :
         A = set()
         for v in vertices :
-            for r in range(0,self.graph.__len__()) :
+            for c in range(self.graph.__len__()) :
+                if self.ids[c]==v : break
+
+            for r in range(self.graph.__len__()) :
                 row = self.graph[r]
-                if row[v] == 1 : 
+                if row[c] == 1 :
                     if self.owner[r]==o :   # any adge :
-                        A=A.union({r}) 
+                        A=A.union({self.ids[r]}) 
                     elif sum(row)==1 :      # all ages :
-                        A=A.union({r})
+                        A=A.union({self.ids[r]})
+
         A=A.union(vertices)
         if A.__len__()==vertices.__len__() :
             return A
@@ -98,7 +89,7 @@ def Zielonka(G) :
 
         U = []
         for i in range(0,G.graph.__len__()) :
-            if G.colors[i] == m : U.append(i)
+            if G.colors[i] == m : U.append(G.ids[i])
 
         A = G.attractor(p,U)
 
