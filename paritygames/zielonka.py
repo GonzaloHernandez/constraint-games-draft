@@ -84,12 +84,12 @@ class Game :
 # ============================================================
 
 def Zielonka(G) :
-    G.print()
-    print()
+    # G.print()
+    # print()
   
-    W = [[]]
+    W = [[],[]]
     if G.graph == [] :
-        (W[p],W[q]) = (0,0)
+        (W[0],W[1]) = (0,0)
     else :
         m = max(G.colors)
         
@@ -102,7 +102,7 @@ def Zielonka(G) :
 
         A = G.attractor(p,U)
 
-        W_ = [[]]
+        # W_ = [[],[]]
 
         G_ = G.copy()
         G_.remove(A)
@@ -114,7 +114,7 @@ def Zielonka(G) :
             G_ = G.copy()
             G_.remove(B)
             W_ = Zielonka(G_)
-            (W[p],W[q]) = (W_[p],W_[q]+B)
+            (W[0],W[1]) = (W_[p],W_[q]+B)
         return W
 
 # ============================================================
