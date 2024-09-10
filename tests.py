@@ -1,47 +1,50 @@
 import os, copy
 os.system("clear")
 
-from SimpleCOPSolver import *
+# from SimpleCOPSolver import *
 
-x   = IntVar('x0',1,9)
-y   = IntVar('y1',1,9)
-z   = IntVar('z2',1,3)
-ux  = IntVar('u3',0,1)
-uy  = IntVar('u4',0,1)
-uz  = IntVar('u5',0,1)
+# x   = IntVar('x0',1,9)
+# y   = IntVar('y1',1,9)
+# z   = IntVar('z2',1,3)
+# ux  = IntVar('u3',0,1)
+# uy  = IntVar('u4',0,1)
+# uz  = IntVar('u5',0,1)
 
-gx = Constraint(
-    ux == (x == (y*z))
-)
+# gx = Constraint(
+#     ux == (x == (y*z))
+# )
 
-gy = Constraint(
-    uy == (y == (x*z))
-)
+# gy = Constraint(
+#     uy == (y == (x*z))
+# )
 
-gz = Constraint(
-    uz == (
-        (((x*y) <= z) & (z <= (x+y)))
-        &
-        (((x+1)*(y+1)) != (z*3))
-    )
-)
+# gz = Constraint(
+#     uz == (
+#         (((x*y) <= z) & (z <= (x+y)))
+#         &
+#         (((x+1)*(y+1)) != (z*3))
+#     )
+# )
 
-V = [ x, y, z]
-U = [ux,uy,uz]
-G = [gx,gy,gz]
+# V = [ x, y, z]
+# U = [ux,uy,uz]
+# G = [gx,gy,gz]
 
-C = [
-    Constraint(x==1)
-]
+# C = [
+#     Constraint(x==1)
+# ]
 
-S = solveModel( V+U, G, minimize(x-y+z))
+# S = solveModel( V+U, G, minimize(x-y+z))
 
-for s in S :
-    printvars(s)
+# for s in S :
+#     printvars(s)
     
-print(f"Total Solutions: {len(S)}") 
+# print(f"Total Solutions: {len(S)}") 
 
 # _start  = time.time()   # PROFILER
 # _end    = time.time()   # PROFILER
 # print(f"PROFILER: {(_end-_start):.2f}sg")
 
+A = set()
+A = A.union({2,3,5})
+print(A.__len__())
